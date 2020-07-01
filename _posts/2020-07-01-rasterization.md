@@ -6,9 +6,7 @@ tags: [computer graphics, rasterization]
 feature: assets/img/rasterization/initial_img.png
 ---
 
-## **Abstract:** 
-
-In this activity,  I will discuss and implement algorithms or the rasterization of points and lines. The rasterization of these primitives will be done by simulating direct access to video memory. As current operating systems protect memory from direct access, I will use a framework, provided by the professor, that simulates access to video memory.
+In this article,  I will discuss and implement algorithms or the rasterization of points and lines. The rasterization of these primitives will be done by simulating direct access to video memory. As current operating systems protect memory from direct access, I will use a framework, provided by the professor, that simulates access to video memory.
 
 ---
 
