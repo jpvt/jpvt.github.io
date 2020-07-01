@@ -24,14 +24,14 @@ A digital image is composed of *pixels*, each with finite, discrete quantities o
 Therefore, in the RGB standard, each pixel consists of three channels, each representing a color (R for red, G for green and B for blue). Usually, 8 bits are reserved for each component(channel), which is distinguished in 256 different intensity levels for each color, resulting in approximately 16 million colors reproduced in total. Additionally, channel A (alpha) can be used for transparency. Consequently, the representation of the components of an RGBA space is given as follows:
 
 <p align="center">
-  <img src="assets/img/rasterization/Pixel-alloc.png" >
+  <img src="/assets/img/rasterization/Pixel-alloc.png" >
 </p>
 <p align="center">
 <sub>Figure 1. Representation of an RGBA image storage</sub>
 </p>
 
 <p align="center">
-  <img src="assets/img/rasterization/RGB-space.jpg" >
+  <img src="/assets/img/rasterization/RGB-space.jpg" >
 </p>
 <p align="center">
 <sub>Figure 2. Representation of an RGB color wheel</sub>
@@ -45,7 +45,7 @@ As seen before, a raster image is composed of a two-dimensional space, although 
 
 Consequently, an algorithm was presented in the classroom that performs such allocation, as can be exemplified in the following images:
 <p align="center">
-  <img src="assets/img/rasterization/img_storage.png" >
+  <img src="/assets/img/rasterization/img_storage.png" >
 </p>
 <p align="center">
 <sub>Figure 4. Representation of the image storage</sub>
@@ -54,7 +54,7 @@ Consequently, an algorithm was presented in the classroom that performs such all
 Considering that the number of pixels on the screen is equal to the number of lines multiplied by the number of columns, the memory must have this same number of positions to represent the screen linearly. Therefore, the following algorithm decides the position of each pixel and each channel of a pixel in memory, considering the width in pixels of the screen:
 
 <p align="center">
-  <img src="assets/img/rasterization/Pixel-alloc-alg.png" >
+  <img src="/assets/img/rasterization/Pixel-alloc-alg.png" >
 </p>
 <p align="center">
 <sub>Figure 5. Representation of the offset algorithm and color buffer</sub>
@@ -63,7 +63,7 @@ Considering that the number of pixels on the screen is equal to the number of li
 Thus, the pixel position and the RGBA color definition are required to rasterize a pixel on the screen. To do so, I have created the following structures and functions:
 
 <p align="center">
-  <img src="assets/img/rasterization/putpixel_h.png" >
+  <img src="/assets/img/rasterization/putpixel_h.png" >
 </p>
 <p align="center">
 <sub>Figure 6. Pixel struct, SetPixel ,and PutPixel Functions declaration</sub>
@@ -74,7 +74,7 @@ Thus, the pixel position and the RGBA color definition are required to rasterize
     After setting the Pixel information, the pixel is ready to be printed in the window with the function **PutPixel** based on the algorithm discussed before.
 
     <p align="center">
-    <img src="assets/img/rasterization/putpixel_c.png" >
+    <img src="/assets/img/rasterization/putpixel_c.png" >
     </p>
     <p align="center">
     <sub>Figure 7. SetPixel, PutPixel functions</sub>
@@ -83,7 +83,7 @@ Thus, the pixel position and the RGBA color definition are required to rasterize
     In the following figure, I have printed 5 pixels in the screen to test my function.
 
     <p align="center">
-    <img src="assets/img/rasterization/putpixel_term.png" >
+    <img src="/assets/img/rasterization/putpixel_term.png" >
     </p>
     <p align="center">
     <sub>Figure 8. PutPixel in action</sub>
@@ -94,7 +94,7 @@ Thus, the pixel position and the RGBA color definition are required to rasterize
 ## Rasterization
 
 <p align="center">
-<img src="assets/img/rasterization/rast_foley.png" >
+<img src="/assets/img/rasterization/rast_foley.png" >
 </p>
 <p align="center">
 <sub>Figure 9. Rasterization definition</sub>
@@ -107,14 +107,14 @@ Consequently, rasterization can be used to draw a line on the monitor, as this i
 However, when a line intersects more than one pixel at a given coordinate,  there is ambiguity as to choose which pixel will be painted.
 
 <p align="center">
-<img src="assets/img/rasterization/line_paint.png" >
+<img src="/assets/img/rasterization/line_paint.png" >
 </p>
 <p align="center">
 <sub>Figure 9. Representation of line rasterization</sub>
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/pixel_grid.png" >
+<img src="/assets/img/rasterization/pixel_grid.png" >
 </p>
 <p align="center">
 <sub>Figure 10. Line rasterization ambiguity example</sub>
@@ -124,7 +124,7 @@ A simple strategy to solve this problem is to compute the slope *m* between  ![d
 
 
 <p align="center">
-<img src="assets/img/rasterization/basic_inc.png" >
+<img src="/assets/img/rasterization/basic_inc.png" >
 </p>
 <p align="center">
 <sub>Figure 11. Brute-force strategy</sub>
@@ -133,7 +133,7 @@ A simple strategy to solve this problem is to compute the slope *m* between  ![d
 This strategy is called **The Basic Incremental Algorithm**, and it selects the pixel whose distance to the true line is smallest.
 
 <p align="center">
-<img src="assets/img/rasterization/line_result_basic.png" >
+<img src="/assets/img/rasterization/line_result_basic.png" >
 </p>
 <p align="center">
 <sub>Figure 12. Line rasterization with the Basic Incremental Algorithm</sub>
@@ -209,7 +209,7 @@ A better solution for our problem is **The Bresenham's line algorithm**, this st
 The main point of Bresenham's line algorithm is to decide which pixel will be painted on the screen, whether it will be the pixel to the east or the northeast since we are only considering the first octant. Consequently, we apply the midpoint between the two pixels in the implicit line equation.
 
 <p align="center">
-<img src="assets/img/rasterization/midpoint.png" >
+<img src="/assets/img/rasterization/midpoint.png" >
 </p>
 <p align="center">
 <sub>Figure 12.Bresenham's decision process</sub>
@@ -235,7 +235,7 @@ No, because we're evaluating a whole polynomial every pixel.
 It was observed that :
 
 <p align="center">
-<img src="assets/img/rasterization/e_chosen.png" >
+<img src="/assets/img/rasterization/e_chosen.png" >
 </p>
 <p align="center">
 <sub>Figure 13. Positive decision </sub>
@@ -243,14 +243,14 @@ It was observed that :
 
 
 <p align="center">
-<img src="assets/img/rasterization/ne_chosen.png" >
+<img src="/assets/img/rasterization/ne_chosen.png" >
 </p>
 <p align="center">
 <sub>Figure 14. Negative decision</sub>
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/remember.png" >
+<img src="/assets/img/rasterization/remember.png" >
 </p>
 <p align="center">
 <sub>Figure 15. Implicit line equation</sub>
@@ -261,7 +261,7 @@ It was observed that :
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/first_pixel.png" >
+<img src="/assets/img/rasterization/first_pixel.png" >
 </p>
 <p align="center">
 <sub>Figure 16. First pixel decision equation</sub>
@@ -275,7 +275,7 @@ It was observed that :
 
 
 <p align="center">
-<img src="assets/img/rasterization/octants.png" >
+<img src="/assets/img/rasterization/octants.png" >
 </p>
 <p align="center">
 <sub>Figure 17. Octants analysis</sub>
@@ -312,21 +312,21 @@ Note that in the second octant, Delta Y is greater than Delta X, consequently, t
 For octants #7 and #8, we can mirror the algorithm of octants 2 and 1 respectively, so that the pixel that is always incremented (X in octant 1 and Y in octant 2) is, in this case, decremented, since the line in these octants it grows negatively.
 
 <p align="center">
-<img src="assets/img/rasterization/drawLine.png" >
+<img src="/assets/img/rasterization/drawLine.png" >
 </p>
 <p align="center">
 <sub>Figure 18. DrawLine Function</sub>
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/DrawLineX.png" >
+<img src="/assets/img/rasterization/DrawLineX.png" >
 </p>
 <p align="center">
 <sub>Figure 19. DrawLineX Function</sub>
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/DrawLineY.png" >
+<img src="/assets/img/rasterization/DrawLineY.png" >
 </p>
 <p align="center">
 <sub>Figure 20. DrawLineY Function</sub>
@@ -337,7 +337,7 @@ For octants #7 and #8, we can mirror the algorithm of octants 2 and 1 respective
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/white_line.png" >
+<img src="/assets/img/rasterization/white_line.png" >
 </p>
 <p align="center">
 <sub>Figure 21. DrawLine in action</sub>
@@ -348,7 +348,7 @@ For octants #7 and #8, we can mirror the algorithm of octants 2 and 1 respective
 The Linear Color Interpolation Algorithm consists of interpolating the colors between the start and end points of the line in a linear way, that is, there must be a smooth gradient between the two points of the line.
 
 <p align="center">
-<img src="assets/img/rasterization/linear_color_inter.png" >
+<img src="/assets/img/rasterization/linear_color_inter.png" >
 </p>
 <p align="center">
 <sub>Figure 22. LinearColortIntepolation Function</sub>
@@ -359,7 +359,7 @@ The Linear Color Interpolation Algorithm consists of interpolating the colors be
 </p>
 
 <p align="center">
-<img src="assets/img/rasterization/color_line_polar.png" >
+<img src="/assets/img/rasterization/color_line_polar.png" >
 </p>
 <p align="center">
 <sub>Figure 23. DrawLine + LinearColortIntepolation in action</sub>
@@ -372,7 +372,7 @@ The Linear Color Interpolation Algorithm consists of interpolating the colors be
 The most difficult part of the assignment is done. For drawing a triangle on the screen we just need to draw three lines with common vertices. To do so, I've created the following function :
 
 <p align="center">
-<img src="assets/img/rasterization/drawTriangle.png" >
+<img src="/assets/img/rasterization/drawTriangle.png" >
 </p>
 <p align="center">
 <sub>Figure 24. DrawTriangle Function</sub>
@@ -381,7 +381,7 @@ The most difficult part of the assignment is done. For drawing a triangle on the
 And that was the result:
 
 <p align="center">
-<img src="assets/img/rasterization/color_triangle_inter.png" >
+<img src="/assets/img/rasterization/color_triangle_inter.png" >
 </p>
 <p align="center">
 <sub>Figure 25. DrawTriangle in action</sub>
@@ -400,6 +400,8 @@ The main difficulty in this assignment was to adapt the midpoint algorithm to al
  * https://en.wikipedia.org/wiki/Digital_image
  * Prof. Christian Notes
 
- ## Repository
+---
+
+## Repository
 
 Check it out on [Github](https://github.com/jpvt/Computer_Graphics/tree/master/Assignment%20%231).
