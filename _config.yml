@@ -1,10 +1,10 @@
 # Site
 title:              João Pedro Vasconcelos
 bio:                'Personal Website.'
-description:        "Website with academic and personal projects."
+description:        "Computer engineering undergrad student, ML researcher, and a learner by nature."
 reading_time:       true
 words_per_minute:   200
-logo:               'assets/img/logo.png'
+logo:               'assets/img/logo.jpeg'
 background:         'assets/img/placeholder-big.jpg'
 tiled_bg:           false   # Set this true if you want to tile your background image, otherwise it will be covered
 #locale:             en_US
