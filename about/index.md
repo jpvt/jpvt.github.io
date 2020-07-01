@@ -40,7 +40,7 @@ From time to time I take online courses for different Data Science Topics and wo
 
 * Data Structures & Algorithms in Python - Udacity
 
-Check out my [portfolio](https://jpvt.github.io//projects/) to see iPython notebooks and Github repos for some of the projects I've worked on.
+Check out my [portfolio](https://jpvt.github.io/projects/) to see iPython notebooks and Github repos for some of the projects I've worked on.
 
 And that's it ! Feel free to connect on [LinkedIn](https://www.linkedin.com/in/jpvt) or get in touch. I'm always happy yo help !
 
