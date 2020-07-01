@@ -1,37 +1,49 @@
 ---
 layout: page
-title: About the Theme
-tags: [about, Jekyll, theme, moon]
-date: 2016-03-21
+title: About
+tags: [about, me]
+date: 2020-07-1
 comments: false
 ---
-    
-<center><a href="http://taylantatli.github.io/Moon"><b>Moon</b></a> is a minimal, one column jekyll theme.</center>
 
-## Features
-* Minimal, you can focus on your content
-* Responsive
-* Disqus integration
-* Syntax highlighting
-* Optional post image
-* Social icons
-* Page for sharing projects
-* Optional background image
-* Simple navigation menu
-* MathJax support
+## Me
 
-## Preview
+Hey, I'm João Pedro. (Since it's a complicated name to pronounce in english, you can call me JP)
 
-{% capture images %}
-    https://cloud.githubusercontent.com/assets/754514/14509720/61c61058-01d6-11e6-93ab-0918515ecd56.png
-    https://cloud.githubusercontent.com/assets/754514/14509716/61ac6c8e-01d6-11e6-879f-8308883de790.png
-{% endcapture %}
-{% include gallery images=images caption="Screenshots of Moon Theme" cols=2 %}
+I'm from São Paulo, Brazil. Though, I have spent most of my life where I currently live João Pessoa, Brazil.
 
-See a [live version of Moon](http://taylantatli.github.io/Moon) hosted on GitHub.
+I'm a Computer Engineering Undergrad student at the [Federal University of Paraíba](https://www.ufpb.br), and a Machine Learning Researcher at [ArIA - Artificial Intelligence Applications Laboratory](https://aria.ci.ufpb.br), where I've been studying Artificial Intelligence for the past months.
 
-## Getting Started
+Outside of computer science, I enjoy learning random stuff, traveling, playing Dungeons&Dragons, and caffeine :)
 
-To learn how to install and use this theme check out the [Setup Guide](http://taylantatli.me/Moon/moon-theme/) for more information.
-      
-[Install Moon](https://github.com/TaylanTatli/Moon){: .btn}
+## What I know
+
+As a result of my curiosity, I have practical experience with a few technologies including :
+
+Python  • PostgreSQL • Scikit-Learn • NLTK • Pandas • Numpy • C/C++ • Modern OpenGL • OpenCV • Linux • Apache Kafka • Docker
+
+for use with concepts such as:
+
+Machine Learning Algorithms • Data Analysis • Natural Language Processing • Database Systems • Microsservices • Computer Vision • Containers • Computer Graphics • Data Visualization
+
+## Certificates I've completed:
+
+From time to time I take online courses for different Data Science Topics and work independently on projects in my free time. Some of them:
+
+* Machine Learning A-Z™: Hands-On Python & R In Data Science - Udemy
+
+* Deep Learning A-Z™: Hands-On Artificial Neural Networks - Udemy
+
+* Deep Learning and Computer Vision A-Z™: OpenCV, SSD & GANs - Udemy
+
+* Intro to Statistics - Udacity
+
+* Data Structures & Algorithms in Python - Udacity
+
+Check out my [portfolio](https://jpvt.github.io//projects/) to see iPython notebooks and Github repos for some of the projects I've worked on.
+
+And that's it ! Feel free to connect on [LinkedIn](https://www.linkedin.com/in/jpvt) or get in touch. I'm always happy yo help !
+
+You can send an email directly to <a href="mailto:joaoteixeira@eng.ci.ufpb.br">joaoteixeira@eng.ci.ufpb.br</a>.
+
+Thank you for your time !
