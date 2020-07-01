@@ -2,7 +2,7 @@
 layout: post
 title:  "Setting up Modern OpenGL on Linux"
 date:   2020-07-01 
-tags: [computer graphics, rasterization]
+tags: [computer graphics, rasterization, OpenGL]
 feature: assets/img/setupOpenGL/initial_img.png
 ---
 
