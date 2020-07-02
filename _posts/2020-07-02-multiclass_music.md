@@ -4,7 +4,7 @@ title:  " Multi-label classification of music into emotions"
 date:   2020-07-01
 project: true 
 tags: [Machine Learning, Classification, Multilabel, EDA]
-feature: assets/img/multiclass_music/initial_img.png
+feature: assets/img/music/initial_img.png
 ---
 In this notebook, I will discuss the results of my first assignment of the class Introduction to Artificial Intelligence. My job was to implement an automatic emotion detector in music from a pre-determined dataset. Finally, I will discuss my results and present some insights into the data.
 
@@ -213,7 +213,7 @@ plt.show()
 ```
 
 <p align="center">
-  <img src="assets/img/multiclass_music/multiclass_music_12_0.png" >
+  <img src="/assets/img/music/music_12_0.png" >
 </p>
 
 
@@ -276,7 +276,7 @@ class_label_df.Class.value_counts()
 ```
 
 <p align="center">
-  <img src="assets/img/multiclass_music/multiclass_music_16_0.png" >
+  <img src="/assets/img/music/music_16_0.png" >
 </p>
 
 
@@ -802,12 +802,12 @@ plt.show()
 
 
 <p align="center">
-  <img src="multiclass_music_files/multiclass_music_55_1.png" >
+  <img src="/assets/img/music//music_55_1.png" >
 </p>
 
 
 <p align="center">
-  <img src="multiclass_music_files/multiclass_music_55_2.png" >
+  <img src="/assets/img/music//music_55_2.png" >
 </p>
 
 
