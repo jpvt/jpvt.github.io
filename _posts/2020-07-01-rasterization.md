@@ -2,7 +2,6 @@
 layout: post
 title:  "Introduction to Rasterization Algorithms"
 date:   2020-07-01
-project: false 
 tags: [computer graphics, rasterization]
 feature: assets/img/rasterization/initial_img.png
 ---
