@@ -212,8 +212,9 @@ plt.xticks(range(len(label_d)), list(label_d.keys()))
 plt.show()
 ```
 
-
-![png](assets/img/multiclass_music/multiclass_music_12_0.png)
+<p align="center">
+  <img src="assets/img/multiclass_music/multiclass_music_12_0.png" >
+</p>
 
 
 From this graph, it is possible to observe an imbalance between classes. Many songs convey relaxing-calm, and few represent quiet-still.
@@ -274,9 +275,9 @@ plt.show()
 class_label_df.Class.value_counts()
 ```
 
-
-![png](assets/img/multiclass_music/multiclass_music_16_0.png)
-
+<p align="center">
+  <img src="assets/img/multiclass_music/multiclass_music_16_0.png" >
+</p>
 
 
 
@@ -800,12 +801,14 @@ plt.show()
      [ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  5]]
 
 
+<p align="center">
+  <img src="multiclass_music_files/multiclass_music_55_1.png" >
+</p>
 
-![png](multiclass_music_files/multiclass_music_55_1.png)
 
-
-
-![png](multiclass_music_files/multiclass_music_55_2.png)
+<p align="center">
+  <img src="multiclass_music_files/multiclass_music_55_2.png" >
+</p>
 
 
 ### Results and future work:
