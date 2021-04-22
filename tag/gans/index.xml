@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>GANs | João Pedro Vasconcelos</title>
+    <link>https://jpvt.github.io/tag/gans/</link>
+      <atom:link href="https://jpvt.github.io/tag/gans/index.xml" rel="self" type="application/rss+xml" />
+    <description>GANs</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Wed, 21 Apr 2021 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://jpvt.github.io/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_512x512_fill_lanczos_center_2.png</url>
+      <title>GANs</title>
+      <link>https://jpvt.github.io/tag/gans/</link>
+    </image>
+    
+    <item>
+      <title>GANdido Portinari</title>
+      <link>https://jpvt.github.io/project/gandido/</link>
+      <pubDate>Wed, 21 Apr 2021 00:00:00 +0000</pubDate>
+      <guid>https://jpvt.github.io/project/gandido/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

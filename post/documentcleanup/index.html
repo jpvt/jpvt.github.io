@@ -1,0 +1,1501 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  
+  
+  
+    <meta name="generator" content="Wowchemy 5.1.0 for Hugo" />
+  
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="João Pedro Vasconcelos Teixeira" />
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Many image processing applications make use of digitalized textual data. However, the presence of any type of noise can create difficulties in post-processing information, such as on OCR detection. To improve the information manipulation on such data, a previous image processing step is required. The objective of this article is to evaluate the possible image processing methods that could fix the text samples." />
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://jpvt.github.io/post/documentcleanup/" />
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+
+  
+  
+  
+    <meta name="theme-color" content="#1565c0" />
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.0/css/academicons.min.css" integrity="sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg==" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+
+    
+    
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/github.min.css" crossorigin="anonymous" title="hl-light" media="print" onload="this.media='all'">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" media="print" onload="this.media='all'" disabled>
+        
+      
+    
+
+    
+    
+    
+
+    
+
+    
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+  
+
+  
+  
+  
+    
+      
+      <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto+Mono&family=Roboto:wght@400;700&display=swap">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto+Mono&family=Roboto:wght@400;700&display=swap" media="print" onload="this.media='all'">
+    
+  
+
+  
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/wowchemy.9a66e344a68eb664b392d406a3f80726.css" />
+
+  
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-175580585-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+      dataLayer.push(arguments);
+  }
+
+  function trackOutboundLink(url, target) {
+    gtag('event', 'click', {
+         'event_category': 'outbound',
+         'event_label': url,
+         'transport_type': 'beacon',
+         'event_callback': function () {
+           if (target !== '_blank') {
+             document.location = url;
+           }
+         }
+    });
+    console.debug("Outbound link clicked: " + url);
+  }
+
+  function onClickCallback(event) {
+    if ((event.target.tagName !== 'A') || (event.target.host === window.location.host)) {
+      return;
+    }
+    trackOutboundLink(event.target, event.target.getAttribute('target'));  
+  }
+
+  gtag('js', new Date());
+  gtag('config', 'UA-175580585-1', {});
+  gtag('set', {'cookie_flags': 'SameSite=None;Secure'});
+
+  
+  document.addEventListener('click', onClickCallback, false);
+</script>
+
+
+  
+
+  
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+    <link rel="manifest" href="/index.webmanifest" />
+  
+
+  <link rel="icon" type="image/png" href="/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_32x32_fill_lanczos_center_2.png" />
+  <link rel="apple-touch-icon" type="image/png" href="/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_180x180_fill_lanczos_center_2.png" />
+
+  <link rel="canonical" href="https://jpvt.github.io/post/documentcleanup/" />
+
+  
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image" />
+  
+  <meta property="og:site_name" content="João Pedro Vasconcelos" />
+  <meta property="og:url" content="https://jpvt.github.io/post/documentcleanup/" />
+  <meta property="og:title" content="Denoising Documents with Computer Vision and Digital Image Processing | João Pedro Vasconcelos" />
+  <meta property="og:description" content="Many image processing applications make use of digitalized textual data. However, the presence of any type of noise can create difficulties in post-processing information, such as on OCR detection. To improve the information manipulation on such data, a previous image processing step is required. The objective of this article is to evaluate the possible image processing methods that could fix the text samples." /><meta property="og:image" content="https://jpvt.github.io/post/documentcleanup/featured.png" />
+    <meta property="twitter:image" content="https://jpvt.github.io/post/documentcleanup/featured.png" /><meta property="og:locale" content="en-us" />
+  
+    
+      <meta
+        property="article:published_time"
+        content="2020-12-07T00:00:00&#43;00:00"
+      />
+    
+    <meta property="article:modified_time" content="2020-12-07T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://jpvt.github.io/post/documentcleanup/"
+  },
+  "headline": "Denoising Documents with Computer Vision and Digital Image Processing",
+  
+  "image": [
+    "https://jpvt.github.io/post/documentcleanup/featured.png"
+  ],
+  
+  "datePublished": "2020-12-07T00:00:00Z",
+  "dateModified": "2020-12-07T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "João Pedro Vasconcelos Teixeira"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "João Pedro Vasconcelos",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://jpvt.github.io/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "Many image processing applications make use of digitalized textual data. However, the presence of any type of noise can create difficulties in post-processing information, such as on OCR detection. To improve the information manipulation on such data, a previous image processing step is required. The objective of this article is to evaluate the possible image processing methods that could fix the text samples."
+}
+</script>
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+  <title>Denoising Documents with Computer Vision and Digital Image Processing | João Pedro Vasconcelos</title>
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class="page-wrapper   " data-wc-page-id="ee84bc393cd4be9d39aa0990f73fe67b" >
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <script src="/js/wowchemy-init.min.226a9011996d125bf3fe4a5f22353a49.js"></script>
+
+  
+
+
+<aside class="search-modal" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#" aria-label="Close"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control"
+        aria-label="Search...">
+        
+      </div>
+
+      
+      
+
+      
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+
+  <div class="page-header">
+    
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container-xl">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">João Pedro Vasconcelos</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">João Pedro Vasconcelos</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/uploads/resume.pdf"><span>Resume</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+
+      
+      
+        
+      
+
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-label="Display preferences">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  </div>
+
+  <div class="page-body">
+    <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+
+<div class="article-container pt-3">
+  <h1>Denoising Documents with Computer Vision and Digital Image Processing</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+  
+  
+  <div>
+    
+
+  <span >
+      João Pedro Vasconcelos Teixeira</span>
+  </div>
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Abr 712, 70712
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    8 min read
+  </span>
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="/category/computer-vision/">Computer Vision</a>, <a href="/category/digital-image-processing/">Digital Image Processing</a>, <a href="/category/deep-learning/">Deep Learning</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 580px;">
+  <div style="position: relative">
+    <img src="/post/documentcleanup/featured_hu9f6346f757e60832cf1656623a959366_1556720_1200x0_resize_lanczos_2.png" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Description</li>
+<li>Requirements</li>
+<li>Median Filtering</li>
+<li>AutoEncoder</li>
+<li>References</li>
+</ol>
+<h2 id="1-description">1. Description</h2>
+<p>Many image processing applications make use of digitalized textual data. However, the presence of any type of noise can create difficulties in post-processing information, such as on OCR detection. To improve the information manipulation on such data, a previous image processing step is required.</p>
+<p>In light of this idea, a set of text paragraphs containing plain English language was collected. Different font styles, size, and background noise level were arranged to simulate the a variety of scenarios.</p>
+<p>The objective of this article is to evaluate the possible image processing methods that could fix the text samples. Note that the samples have a different type of background noise and present a set of text fonts. Therefore, the candidate should provide a flexible algorithm that can correctly detect what is text characters and background noise, offering a clean version of each text paragraph as result.</p>
+<h2 id="2-requirements">2. Requirements</h2>
+<p>Assuming that you have a clean enviroment to run this jupyter notebook, create a new code block, copy and paste the following code and run it:</p>
+<pre><code class="language-py">!pip install numpy
+!pip install scipy
+!pip install pillow
+!pip install opencv-python
+!pip install matplotlib
+!pip install tensorflow
+!pip install scikit-learn
+</code></pre>
+<pre><code class="language-python">########################################################
+from os import listdir
+from os.path import isfile, join
+########################################################
+import numpy as np
+from scipy import signal
+from PIL import Image
+import cv2
+import matplotlib.pyplot as plt
+########################################################
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import Sequential, Model, layers
+from sklearn.model_selection import train_test_split
+########################################################
+# Comment the following code if you don't have tensorflow-gpu installed in your enviroment
+gpu = len(tf.config.list_physical_devices('GPU'))&gt;0
+print(&quot;GPU is&quot;, &quot;available&quot; if gpu else &quot;NOT AVAILABLE&quot;)
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+</code></pre>
+<pre><code>GPU is available
+</code></pre>
+<h2 id="3-median-filtering">3. Median Filtering</h2>
+<p>A simple way to solve this problem is using classic digital image processing techniques since it will not be necessary to train any machine learning algorithms, which usually require more data, time, and better hardware. So, as a first answer, I will apply the median filter to get the background of the image, then I will subtract it from the original image.</p>
+<pre><code class="language-python">class Denoiser:
+    &quot;&quot;&quot;
+    Class that creates and object capable of colect dirty images and partially clean some of its noise
+    &quot;&quot;&quot;
+    
+    def __init__(self):
+        self.input_image = None
+        self.output_image = None
+    
+    def load_image(self, path):
+        # Load an image from the path and return it as a numpy array
+        return np.asarray(Image.open(path))/255.0
+    
+    def save_image(self, dest_path, image):
+        #  Take some image array(image) and save it in the destination(dest_path)
+        img_arr = np.asarray(image*255.0, dtype=np.uint8)
+        Image.fromarray(img_arr).save(dest_path)
+        
+    def denoiser_pipeline(self, image):
+        # Collect background
+        background = signal.medfilt2d(image, 11)
+        # Select anything that is darker than the background
+        foreground_mask = image &lt; background - 0.1
+        # Return black for anything that is darker than the background or white otherwise
+        output_image = np.where(foreground_mask, 0.0, 1.0)
+        
+        return output_image
+        
+    def clean(self, image_path, dest_path):
+        # Load the input image
+        self.input_image = self.load_image(image_path)
+        # Process the image and load it in the output
+        self.output_image = self.denoiser_pipeline(self.input_image)
+        # Saves the output
+        self.save_image(dest_path, self.output_image)
+        
+    def show(self):
+        # Show the last image filtered in a kernel
+        in_img = np.asarray(self.input_image*255.0, dtype = np.uint8)
+        out_img = np.asarray(self.output_image*255.0, dtype = np.uint8)
+        
+        fig , axs = plt.subplots(1,2, figsize = (16,16))
+        axs[0].imshow(Image.fromarray(in_img), cmap = 'gray')
+        axs[1].imshow(Image.fromarray(out_img), cmap = 'gray')
+        axs[0].axis('off')
+        axs[1].axis('off')
+        plt.show()
+</code></pre>
+<pre><code class="language-python">input_datapath = 'noisy_data/'
+output_datapath = 'output_median/'
+
+files = [f for f in listdir(input_datapath) if isfile(join(input_datapath, f))]
+
+denoiser = Denoiser()
+
+for f in files:
+    
+    denoiser.clean(input_datapath + f, output_datapath + f)
+</code></pre>
+<pre><code class="language-python">denoiser.show()
+</code></pre>
+<p><img src="output_11_0.png" alt="png"></p>
+<p>Analyzing the processed images is possible to see that the algorithm works relatively well, considering its simplicity. It is possible to use it in scenarios without many resources to use more sophisticated and modern solutions.</p>
+<p>The results are available in the output_median directory.</p>
+<h2 id="4-autoencoder">4. AutoEncoder</h2>
+<p>A more sophisticated answer to the problem is using the &ldquo;magic&rdquo; of Deep Learning. For this, I will use an Autoencoder network, which is composed of an encoder and a decoder. The encoder compresses the data to a smaller representation. The decoder reconstructs this representation to obtain an output close to the input. During the process, the autoencoder learns the most important features that make up the data.</p>
+<p>Autoencoders can reduce image noise by providing noisy data as an input and outputting the same data without noise. Then, the autoencoder can learn how to filter similar data efficiently.</p>
+<p>But how is it possible to apply this to the proposed problem?</p>
+<p>As stated in the test description, cleaning document images is a well-documented problem. Then it is possible to find databases that provide images with background noise and their respective clean version with ease. After looking for a database that fits the task, I trained an autoencoder using its dirty data as input and its clean images as output. So, I used the network to filter the dirty inputs presented by the challenge.</p>
+<pre><code class="language-python"># Simple image process to standardize our data
+def process_image(path):
+    img = cv2.imread(path)
+    img = np.asarray(img, dtype=&quot;float32&quot;)
+    img = cv2.resize(img, (540, 420))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = img/255.0
+    img = np.reshape(img, (420, 540, 1))
+    
+    return img
+</code></pre>
+<pre><code class="language-python"># Loading the training images
+noisy_path = 'train/'
+clean_path = 'train_cleaned/'
+test_path = 'test/'
+
+noisy_dir = listdir(noisy_path)
+x_paths = [noisy_path+x for x in noisy_dir]
+
+clean_dir = listdir(clean_path)
+y_paths = [clean_path+y for y in clean_dir]
+
+size = (420,540)
+
+
+X = []
+y = []
+
+for image in x_paths:
+    
+    img = process_image(image)
+    X.append(img)
+
+for label in y_paths:
+    
+    img = process_image(label)
+    y.append(img)
+    
+
+
+X = np.array(X)
+y = np.array(y)
+
+
+fig, axs = plt.subplots(1,2, figsize = (16,16))
+
+axs[0].set_title('Dirty Image')
+axs[0].imshow(X[0][:,:,0], cmap = 'gray')
+axs[0].axis('off')
+
+axs[1].set_title('Clean Image')
+axs[1].imshow(y[0][:,:,0], cmap = 'gray')
+axs[1].axis('off')
+
+plt.show()
+
+
+print(&quot;Size of X : &quot;, X.shape)
+print(&quot;Size of Y : &quot;, y.shape)
+</code></pre>
+<p><img src="output_16_0.png" alt="png"></p>
+<pre><code>Size of X :  (144, 420, 540, 1)
+Size of Y :  (144, 420, 540, 1)
+</code></pre>
+<p>For the construction of the autoencoder, I will use:</p>
+<ul>
+<li>Convolutional layers to extract the significant features of the images;</li>
+<li>Max-pooling for data compression;</li>
+<li>Up-sampling for restoring the data dimension;</li>
+<li>Batch normalization to reduce the difference in the distribution of activations between the layers.</li>
+</ul>
+<pre><code class="language-python">def autoencoder():
+    
+    
+    input_layer = layers.Input(shape=(420,540,1), name= 'Image_Input')
+    
+    # Encoder
+    
+    x = layers.Conv2D(32, (3,3), activation = 'relu', padding = 'same', name = 'Convolutional_Layer_1')(input_layer)
+    x = layers.Conv2D(64, (3,3), activation = 'relu', padding = 'same', name = 'Convolutional_Layer_2')(x)
+    x = layers.BatchNormalization()(x)
+    
+    x = layers.MaxPooling2D((2,2), padding = 'same', name='Pooling_Layer_3')(x)
+    
+    
+    # Decoder
+    x = layers.Conv2D(64, (3,3), activation = 'relu', padding = 'same', name = 'Convolutional_Layer_5')(x)
+    x = layers.Conv2D(32, (3,3), activation = 'relu', padding = 'same', name = 'Convolutional_Layer_6')(x)
+    x = layers.BatchNormalization()(x)
+    
+    x = layers.UpSampling2D((2,2), name = 'UpSampling_Layer_3')(x)
+    
+    output_layer = layers.Conv2D(1, (3,3), activation = 'sigmoid', padding = 'same', name = 'Convolutional_Layer_7')(x)
+    
+    # Model
+    
+    autoencoder = Model(inputs = [input_layer], outputs = [output_layer])
+    autoencoder.compile(optimizer = 'adam', loss='mean_squared_error', metrics=['mae'])
+    
+    return autoencoder
+</code></pre>
+<pre><code class="language-python">ae = autoencoder()
+ae.summary()
+</code></pre>
+<pre><code>Model: &quot;model&quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+Image_Input (InputLayer)     [(None, 420, 540, 1)]     0         
+_________________________________________________________________
+Convolutional_Layer_1 (Conv2 (None, 420, 540, 32)      320       
+_________________________________________________________________
+Convolutional_Layer_2 (Conv2 (None, 420, 540, 64)      18496     
+_________________________________________________________________
+batch_normalization (BatchNo (None, 420, 540, 64)      256       
+_________________________________________________________________
+Pooling_Layer_3 (MaxPooling2 (None, 210, 270, 64)      0         
+_________________________________________________________________
+Convolutional_Layer_5 (Conv2 (None, 210, 270, 64)      36928     
+_________________________________________________________________
+Convolutional_Layer_6 (Conv2 (None, 210, 270, 32)      18464     
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 210, 270, 32)      128       
+_________________________________________________________________
+UpSampling_Layer_3 (UpSampli (None, 420, 540, 32)      0         
+_________________________________________________________________
+Convolutional_Layer_7 (Conv2 (None, 420, 540, 1)       289       
+=================================================================
+Total params: 74,881
+Trainable params: 74,689
+Non-trainable params: 192
+_________________________________________________________________
+</code></pre>
+<pre><code class="language-python">keras.utils.plot_model(ae, &quot;assets/autoencoder.png&quot;, show_shapes=True)
+</code></pre>
+<p><img src="output_20_0.png" alt="png"></p>
+<pre><code class="language-python">X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.1, random_state=0)
+print(&quot;Total number of training samples: &quot;, X_train.shape)
+print(&quot;Total number of validation samples: &quot;, X_valid.shape)
+</code></pre>
+<pre><code>Total number of training samples:  (129, 420, 540, 1)
+Total number of validation samples:  (15, 420, 540, 1)
+</code></pre>
+<pre><code class="language-python">callback = keras.callbacks.EarlyStopping(monitor='loss', patience=20)
+
+hist = ae.fit(X_train, y_train, epochs=50, batch_size=2, validation_data=(X_valid, y_valid), callbacks = [callback])
+</code></pre>
+<pre><code class="language-python">epoch_loss = hist.history['loss']
+epoch_val_loss = hist.history['val_loss']
+epoch_mae = hist.history['mae']
+epoch_val_mae = hist.history['val_mae']
+
+plt.figure(figsize=(20,6))
+plt.subplot(1,2,1)
+plt.plot(range(0,len(epoch_loss)), epoch_loss, 'b-', linewidth=2, label='Train Loss')
+plt.plot(range(0,len(epoch_val_loss)), epoch_val_loss, 'r-', linewidth=2, label='Val Loss')
+plt.title('Evolution of loss on train &amp; validation datasets over epochs')
+plt.legend(loc='best')
+
+plt.subplot(1,2,2)
+plt.plot(range(0,len(epoch_mae)), epoch_mae, 'b-', linewidth=2, label='Train MAE')
+plt.plot(range(0,len(epoch_val_mae)), epoch_val_mae, 'r-', linewidth=2,label='Val MAE')
+plt.title('Evolution of MAE on train &amp; validation datasets over epochs')
+plt.legend(loc='best')
+
+plt.show()
+</code></pre>
+<p><img src="output_23_0.png" alt="png"></p>
+<p>The neural network seems to have learned to solve the problem well for the data sample provided so far, as you can see in the graphs.</p>
+<p>However, this does not mean that the network has learned well for images it has never seen, different noises, rotated texts.</p>
+<p>Then we will test the images on the noisy data provided by the test to check if the algorithm used was efficient.</p>
+<pre><code class="language-python">test_path = 'noisy_data/'
+test_dir = listdir(test_path)
+test_paths = [test_path+x for x in test_dir]
+
+X_test = []
+for image in test_paths:
+    
+    img = process_image(image)
+    X_test.append(img)
+    
+X_test = np.array(X_test)
+print(X_test.shape)
+</code></pre>
+<pre><code>(144, 420, 540, 1)
+</code></pre>
+<pre><code class="language-python">Y_test = ae.predict(X_test, batch_size=4)
+</code></pre>
+<pre><code class="language-python">plt.figure(figsize=(15,25))
+for i in range(0,8,2):
+    plt.subplot(4,2,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(X_test[i][:,:,0], cmap='gray')
+    plt.title('Noisy image: {}'.format(test_paths[i]))
+    
+    plt.subplot(4,2,i+2)
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(Y_test[i][:,:,0], cmap='gray')
+    plt.title('Denoised by autoencoder: {}'.format(test_paths[i]))
+
+plt.show()
+</code></pre>
+<p><img src="output_27_0.png" alt="png"></p>
+<p>As you can see in the images above, the approached strategy was very efficient in removing the noise from the data provided. It seems that the model has learned to distinguish the background from the images well, even with different types of noise and rotated texts.</p>
+<h2 id="5-references">5. References</h2>
+<ul>
+<li><a href="https://www.kaggle.com/c/denoising-dirty-documents" target="_blank" rel="noopener">Denoising Dirty Documents Kaggle Competition</a></li>
+<li><a href="https://github.com/jeffheaton/t81_558_deep_learning/blob/master/t81_558_class_14_02_auto_encode.ipynb" target="_blank" rel="noopener">Denoising with AutoEncoders - T81-558: Applications of Deep Neural Networks</a></li>
+<li><a href="https://www.kaggle.com/michalbrezk/denoise-images-using-autoencoders-tf-keras" target="_blank" rel="noopener">Denoise images using Autoencoder[TF, Keras] </a></li>
+</ul>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="/tag/digital-image-processing/">Digital Image Processing</a>
+  
+  <a class="badge badge-light" href="/tag/denoising-images/">Denoising Images</a>
+  
+  <a class="badge badge-light" href="/tag/image/">Image</a>
+  
+  <a class="badge badge-light" href="/tag/deep-learning/">Deep Learning</a>
+  
+  <a class="badge badge-light" href="/tag/autoenconder/">Autoenconder</a>
+  
+  <a class="badge badge-light" href="/tag/computer-vision/">Computer Vision</a>
+  
+  <a class="badge badge-light" href="/tag/tensorflow/">Tensorflow</a>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="https://jpvt.github.io/"><img class="avatar mr-3 avatar-circle" src="/authors/admin/avatar_hube61f6136e23a8f0841380d0415ceb4e_686757_270x270_fill_q75_lanczos_center.jpg" alt="João Pedro Vasconcelos Teixeira"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="https://jpvt.github.io/">João Pedro Vasconcelos Teixeira</a></h5>
+      <h6 class="card-subtitle">Undergraduate Researcher</h6>
+      <p class="card-text">My research interests include computer vision, natural language processing and machine learning</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/jpvt" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/jpvt/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>Related</h3>
+    <ul>
+      
+      <li><a href="/project/smsspamdetection/">SMS Spam Detection with Machine Learning</a></li>
+      
+      <li><a href="/project/gandido/">GANdido Portinari</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+  </div>
+</article>
+  </div>
+
+  <div class="page-footer">
+    
+    
+    <div class="container">
+      <footer class="site-footer">
+
+  
+
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    
+    
+      
+      
+      
+      
+      
+      
+      Published with <a href="https://wowchemy.com/?utm_campaign=poweredby" target="_blank" rel="noopener">Wowchemy</a> — the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">open source</a> website builder that empowers creators.
+    
+  </p>
+</footer>
+
+    </div>
+    
+  </div>
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      
+
+      
+      
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+      
+      <script id="search-hit-fuse-template" type="text/x-template">
+        <div class="search-hit" id="summary-{{key}}">
+          <div class="search-hit-content">
+            <div class="search-hit-name">
+              <a href="{{relpermalink}}">{{title}}</a>
+              <div class="article-metadata search-hit-type">{{type}}</div>
+              <p class="search-hit-description">{{snippet}}</p>
+            </div>
+          </div>
+        </div>
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+      
+    
+
+    
+    
+
+    
+    
+    
+    
+
+    
+    <script src="/js/bootstrap.bundle.min.6aed84840afc03ab4d5750157f69c120.js"></script>
+
+    
+    
+      
+      
+      
+      
+      
+      
+      
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+      
+      
+    
+    
+    <script src="/en/js/wowchemy.min.b61a8f62b6e5c0cd322c8158c5b5dfb6.js"></script>
+
+    
+
+
+
+
+
+
+</body>
+</html>

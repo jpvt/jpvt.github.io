@@ -1,0 +1,2456 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  
+  
+  
+    <meta name="generator" content="Wowchemy 5.1.0 for Hugo" />
+  
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="João Pedro Vasconcelos Teixeira" />
+
+  
+  
+  
+    
+  
+  <meta name="description" content="The goal of the this project is to achieve a model that can correctly manage the incoming messages on SMS format (`ham` or `spam`)." />
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://jpvt.github.io/project/smsspamdetection/" />
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+
+  
+  
+  
+    <meta name="theme-color" content="#1565c0" />
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.0/css/academicons.min.css" integrity="sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg==" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+
+    
+    
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/github.min.css" crossorigin="anonymous" title="hl-light" media="print" onload="this.media='all'">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" media="print" onload="this.media='all'" disabled>
+        
+      
+    
+
+    
+    
+    
+
+    
+
+    
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+      
+      
+
+      
+      
+
+      
+    
+  
+
+  
+  
+  
+    
+      
+      <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto+Mono&family=Roboto:wght@400;700&display=swap">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto+Mono&family=Roboto:wght@400;700&display=swap" media="print" onload="this.media='all'">
+    
+  
+
+  
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/wowchemy.9a66e344a68eb664b392d406a3f80726.css" />
+
+  
+
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-175580585-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+      dataLayer.push(arguments);
+  }
+
+  function trackOutboundLink(url, target) {
+    gtag('event', 'click', {
+         'event_category': 'outbound',
+         'event_label': url,
+         'transport_type': 'beacon',
+         'event_callback': function () {
+           if (target !== '_blank') {
+             document.location = url;
+           }
+         }
+    });
+    console.debug("Outbound link clicked: " + url);
+  }
+
+  function onClickCallback(event) {
+    if ((event.target.tagName !== 'A') || (event.target.host === window.location.host)) {
+      return;
+    }
+    trackOutboundLink(event.target, event.target.getAttribute('target'));  
+  }
+
+  gtag('js', new Date());
+  gtag('config', 'UA-175580585-1', {});
+  gtag('set', {'cookie_flags': 'SameSite=None;Secure'});
+
+  
+  document.addEventListener('click', onClickCallback, false);
+</script>
+
+
+  
+
+  
+
+  
+
+
+
+
+  
+  
+  
+
+  
+
+  
+    <link rel="manifest" href="/index.webmanifest" />
+  
+
+  <link rel="icon" type="image/png" href="/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_32x32_fill_lanczos_center_2.png" />
+  <link rel="apple-touch-icon" type="image/png" href="/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_180x180_fill_lanczos_center_2.png" />
+
+  <link rel="canonical" href="https://jpvt.github.io/project/smsspamdetection/" />
+
+  
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image" />
+  
+  <meta property="og:site_name" content="João Pedro Vasconcelos" />
+  <meta property="og:url" content="https://jpvt.github.io/project/smsspamdetection/" />
+  <meta property="og:title" content="SMS Spam Detection with Machine Learning | João Pedro Vasconcelos" />
+  <meta property="og:description" content="The goal of the this project is to achieve a model that can correctly manage the incoming messages on SMS format (`ham` or `spam`)." /><meta property="og:image" content="https://jpvt.github.io/project/smsspamdetection/featured.jpg" />
+    <meta property="twitter:image" content="https://jpvt.github.io/project/smsspamdetection/featured.jpg" /><meta property="og:locale" content="en-us" />
+  
+    
+      <meta
+        property="article:published_time"
+        content="2020-12-07T00:00:00&#43;00:00"
+      />
+    
+    <meta property="article:modified_time" content="2020-12-07T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://jpvt.github.io/project/smsspamdetection/"
+  },
+  "headline": "SMS Spam Detection with Machine Learning",
+  
+  "image": [
+    "https://jpvt.github.io/project/smsspamdetection/featured.jpg"
+  ],
+  
+  "datePublished": "2020-12-07T00:00:00Z",
+  "dateModified": "2020-12-07T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "João Pedro Vasconcelos Teixeira"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "João Pedro Vasconcelos",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://jpvt.github.io/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "The goal of the this project is to achieve a model that can correctly manage the incoming messages on SMS format (`ham` or `spam`)."
+}
+</script>
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+  <title>SMS Spam Detection with Machine Learning | João Pedro Vasconcelos</title>
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class="page-wrapper   " data-wc-page-id="87cc26c0b5e2ae9b2fcc7425a8b618a5" >
+
+  
+  
+  
+  
+  
+  
+  
+  
+  <script src="/js/wowchemy-init.min.226a9011996d125bf3fe4a5f22353a49.js"></script>
+
+  
+
+
+<aside class="search-modal" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#" aria-label="Close"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control"
+        aria-label="Search...">
+        
+      </div>
+
+      
+      
+
+      
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+
+  <div class="page-header">
+    
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container-xl">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">João Pedro Vasconcelos</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">João Pedro Vasconcelos</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/uploads/resume.pdf"><span>Resume</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+
+      
+      
+        
+      
+
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true" aria-label="Display preferences">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  </div>
+
+  <div class="page-body">
+    <article class="article article-project">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+
+<div class="article-container pt-3">
+  <h1>SMS Spam Detection with Machine Learning</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+  
+  
+  <div>
+    
+
+  <span >
+      João Pedro Vasconcelos Teixeira</span>
+  </div>
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Abr 712, 70712
+  </span>
+  
+
+  
+
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="/category/natural-language-processing/">Natural Language Processing</a>, <a href="/category/classification/">Classification</a>, <a href="/category/machine-learning/">Machine Learning</a>, <a href="/category/data-analysis/">Data Analysis</a>, <a href="/category/deep-learning/">Deep Learning</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+<div class="btn-links mb-3">
+  
+  
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  
+  
+    
+  
+  <a class="btn btn-outline-primary btn-page-header" href="https://github.com/jpvt" target="_blank" rel="noopener">
+    <i class="fab fa-github mr-1"></i>
+    Follow
+  </a>
+
+
+</div>
+
+
+</div>
+
+
+<div class="article-header article-container featured-image-wrapper mt-4 mb-4" style="max-width: 720px; max-height: 480px;">
+  <div style="position: relative">
+    <img src="/project/smsspamdetection/featured_hu587878ad0425bf86cba7febb2eab0d81_3923417_720x0_resize_q75_lanczos.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li>Description</li>
+<li>Requirements</li>
+<li>Data Analysis and Feature Engineering</li>
+<li>Data preprocessing</li>
+<li>Classic ML</li>
+<li>LSTM</li>
+<li>References</li>
+</ol>
+<h2 id="1-description">1. Description</h2>
+<p>The SMS Ham-Spam detection dataset is a set of SMS tagged messages that have been collected for SMS Spam research. It contains a set of 5,574 SMS messages in English, considering both train and test data. The tagging standard was defined as <code>ham</code> (legitimate) or <code>spam</code>.</p>
+<p>The <code>train</code> and <code>test</code> files are formatted using the standard of one message per line. Each line is composed by two columns: one with label (<code>ham</code> or <code>spam</code>) and other with the raw text. Here are some examples:</p>
+<pre><code>ham   What you doing?how are you?
+ham   Ok lar... Joking wif u oni...
+ham   dun say so early hor... U c already then say...
+ham   MY NO. IN LUTON 0125698789 RING ME IF UR AROUND! H*
+ham   Siva is in hostel aha:-.
+ham   Cos i was out shopping wif darren jus now n i called him 2 ask wat present he wan lor. Then he started guessing who i was wif n he finally guessed darren lor.
+spam   FreeMsg: Txt: CALL to No: 86888 &amp; claim your reward of 3 hours talk time to use from your phone now! ubscribe6GBP/ mnth inc 3hrs 16 stop?txtStop
+spam   Sunshine Quiz! Win a super Sony DVD recorder if you canname the capital of Australia? Text MQUIZ to 82277. B
+spam   URGENT! Your Mobile No 07808726822 was awarded a L2,000 Bonus Caller Prize on 02/09/03! This is our 2nd attempt to contact YOU! Call 0871-872-9758 BOX95QU
+</code></pre>
+<pre><code>Note: messages are not chronologically sorted.
+</code></pre>
+<p>For evaluation purposes, the <code>test</code> dataset does not prosent the categories (<code>ham</code>, <code>spam</code>). Therefore, the <code>train</code> data is the full source of information for this test.</p>
+<p>The goal of the this test is to achieve a model that can correctly manage the incoming messages on SMS format (<code>ham</code> or <code>spam</code>). Considering a real scenario, assume that a regular person does not want to see a <code>spam</code> message. However, they accepts if a normal message (<code>ham</code>) is sometimes allocated at the <code>spam</code> box.</p>
+<h2 id="2-requirements">2. Requirements</h2>
+<p>Assuming that you have a clean enviroment to run this jupyter notebook, create a new code block, copy and paste the following code and run it:</p>
+<pre><code class="language-py">!pip install numpy
+!pip install matplotlib
+!pip install tensorflow
+!pip install scikit-learn
+!pip install nltk
+!pip install transformers
+!pip install seaborn
+!pip install xgboost
+</code></pre>
+<pre><code class="language-python">#################################################################################################
+
+import re
+from collections import Counter
+import time
+
+#################################################################################################
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+#################################################################################################
+
+from sklearn import feature_extraction
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.pipeline import Pipeline
+from transformers import TFTrainer, TFTrainingArguments
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from xgboost import XGBClassifier
+
+#################################################################################################
+
+import nltk
+from nltk import WordNetLemmatizer
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+#################################################################################################
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import Sequential, Model, layers
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing import sequence
+from tensorflow.keras.callbacks import EarlyStopping
+
+#################################################################################################
+
+gpu = len(tf.config.list_physical_devices('GPU'))&gt;0
+
+if gpu:
+    print(&quot;GPU is&quot;, &quot;available&quot;)
+    physical_devices = tf.config.list_physical_devices('GPU')
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+else:
+    print(&quot;NOT AVAILABLE&quot;)
+</code></pre>
+<pre><code class="language-python">nltk.download(&quot;punkt&quot;)
+nltk.download(&quot;stopwords&quot;)
+nltk.download(&quot;wordnet&quot;)
+</code></pre>
+<h2 id="3-data-analysis-and-feature-engineering">3. Data Analysis and Feature Engineering</h2>
+<pre><code class="language-python">TRAIN_PATH = 'TrainingSet/sms-hamspam-train.csv'
+
+df = pd.read_csv(TRAIN_PATH,names = ['class','text'], delimiter = '\t')
+
+df
+</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+</code></pre>
+<p></style></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>class</th>
+      <th>text</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ham</td>
+      <td>Go until jurong point, crazy.. Available only ...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>spam</td>
+      <td>SMSSERVICES. for yourinclusive text credits, p...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>spam</td>
+      <td>25p 4 alfie Moon's Children in need song on ur...</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>spam</td>
+      <td>U have a secret admirer. REVEAL who thinks U R...</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>spam</td>
+      <td>Dear Voucher Holder, To claim this weeks offer...</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>4720</th>
+      <td>spam</td>
+      <td>This is the 2nd time we have tried 2 contact u...</td>
+    </tr>
+    <tr>
+      <th>4721</th>
+      <td>ham</td>
+      <td>Will ü b going to esplanade fr home?</td>
+    </tr>
+    <tr>
+      <th>4722</th>
+      <td>ham</td>
+      <td>Pity, * was in mood for that. So...any other s...</td>
+    </tr>
+    <tr>
+      <th>4723</th>
+      <td>ham</td>
+      <td>The guy did some bitching but I acted like i'd...</td>
+    </tr>
+    <tr>
+      <th>4724</th>
+      <td>ham</td>
+      <td>Rofl. Its true to its name</td>
+    </tr>
+  </tbody>
+</table>
+<p>4725 rows × 2 columns</p>
+</div>
+<pre><code class="language-python">fig, axs = plt.subplots(3, 3, figsize =  (16,16))
+
+# Class Distribution
+class_value_counts = df['class'].value_counts(sort = True)
+
+# Plot
+axs[0,0].set_title(&quot;Class Distribution&quot;)
+axs[0,0].pie(class_value_counts, labels = class_value_counts.index, autopct = &quot;%1.0f%%&quot;)
+axs[0,0].axis('off')
+
+
+# Word Frequency
+most_common_ham = pd.DataFrame.from_dict(
+    
+    Counter(&quot; &quot;.join(df.loc[df[&quot;class&quot;]== &quot;ham&quot;][&quot;text&quot;]).split()).most_common(10)
+)
+
+most_common_ham = most_common_ham.rename(columns={0: &quot;word_in_ham&quot;, 1 : &quot;frequency&quot;})
+
+
+most_common_spam = pd.DataFrame.from_dict(
+    
+    Counter(&quot; &quot;.join(df.loc[df[&quot;class&quot;]== &quot;spam&quot;][&quot;text&quot;]).split()).most_common(10)
+)
+
+most_common_spam = most_common_spam.rename(columns={0: &quot;word_in_spam&quot;, 1 : &quot;frequency&quot;})
+
+axs[0,1].set_title(&quot;Word Frequency in Ham SMS&quot;)
+axs[0,1].bar(most_common_ham[&quot;word_in_ham&quot;], most_common_ham[&quot;frequency&quot;])
+axs[0,1].set_xticks(np.arange(len(most_common_ham[&quot;word_in_ham&quot;])))
+axs[0,1].set_xticklabels(most_common_ham[&quot;word_in_ham&quot;])
+axs[0,1].set_xlabel(&quot;Words&quot;)
+axs[0,1].set_ylabel(&quot;Frequency&quot;)
+
+axs[0,2].set_title(&quot;Word Frequency in Spam SMS&quot;)
+axs[0,2].bar(most_common_spam[&quot;word_in_spam&quot;], most_common_spam[&quot;frequency&quot;], color = 'orange')
+axs[0,2].set_xticks(np.arange(len(most_common_spam[&quot;word_in_spam&quot;])))
+axs[0,1].set_xticklabels(most_common_spam[&quot;word_in_spam&quot;])
+axs[0,2].set_xlabel(&quot;Words&quot;)
+axs[0,2].set_ylabel(&quot;Frequency&quot;)
+
+# Length
+df[&quot;message_len&quot;] = df[&quot;text&quot;].apply(len)
+
+sns.kdeplot(
+    df.loc[df['class'] == &quot;ham&quot;, &quot;message_len&quot;],
+    shade=True,
+    label=&quot;Ham&quot;,
+    clip=(-50, 250), ax = axs[1,0]
+)
+sns.kdeplot(df.loc[df['class'] == &quot;spam&quot;, &quot;message_len&quot;], shade=True, label=&quot;Spam&quot;,ax = axs[1,0])
+axs[1,0].set(
+    xlabel=&quot;Length&quot;,
+    ylabel=&quot;Density&quot;,
+    title=&quot;Length of SMS.&quot;,
+)
+axs[1,0].legend(loc=&quot;upper right&quot;)
+
+
+# Number of Words
+df[&quot;nwords&quot;] = df[&quot;text&quot;].apply(lambda s: len(re.findall(r&quot;\w+&quot;, s)))
+
+sns.kdeplot(
+    df.loc[df['class'] == &quot;ham&quot;, &quot;nwords&quot;],
+    shade=True,
+    label=&quot;Ham&quot;,
+    clip=(-10, 50), ax = axs[1,1]
+)
+sns.kdeplot(df.loc[df['class'] == &quot;spam&quot;, &quot;nwords&quot;], shade=True, label=&quot;Spam&quot;, ax = axs[1,1])
+
+axs[1,1].set(
+    xlabel=&quot;Words&quot;,
+    ylabel=&quot;Density&quot;,
+    title=&quot;Number of Words in SMS.&quot;,
+)
+axs[1,1].legend(loc=&quot;upper right&quot;)
+
+
+# Number of Uppercased Words
+df[&quot;nupperwords&quot;] = df[&quot;text&quot;].apply(
+    lambda s: len(re.findall(r&quot;\b[A-Z][A-Z]+\b&quot;, s))
+)
+sns.kdeplot(
+    df.loc[df['class'] == &quot;ham&quot;, &quot;nupperwords&quot;],
+    shade=True,
+    label=&quot;Ham&quot;,
+    clip=(0, 35), ax = axs[1,2]
+)
+sns.kdeplot(df.loc[df['class'] == &quot;spam&quot;, &quot;nupperwords&quot;], shade=True, label=&quot;Spam&quot;, ax = axs[1,2])
+axs[1,2].set(
+    xlabel=&quot;Uppercased Words&quot;,
+    ylabel=&quot;Density&quot;,
+    title=&quot;Number of Uppercased Words.&quot;,
+)
+axs[1,2].legend(loc=&quot;upper right&quot;)
+
+# Number of Uppercased Characters
+df[&quot;nupperchars&quot;] = df[&quot;text&quot;].apply(
+    lambda s: sum(1 for c in s if c.isupper())
+)
+
+sns.scatterplot(x=&quot;message_len&quot;, y=&quot;nupperchars&quot;, hue=&quot;class&quot;, data=df, ax = axs[2,0])
+axs[2,0].set(
+    xlabel=&quot;Characters&quot;,
+    ylabel=&quot;Uppercase Characters&quot;,
+    title=&quot;Number of Uppercased Characters in SMS.&quot;,
+)
+axs[2,0].legend(loc=&quot;upper right&quot;)
+
+
+# Contains free or win
+df[&quot;is_free_or_win&quot;] = df[&quot;text&quot;].apply(
+    lambda s: int(&quot;free&quot; in s.lower() or &quot;win&quot; in s.lower())
+)
+
+
+grouped_data = (
+    df.groupby(&quot;class&quot;)[&quot;is_free_or_win&quot;]
+    .value_counts(normalize=True)
+    .rename(&quot;Percentage of Group&quot;)
+    .reset_index()
+)
+
+axs[2,1].set_title(&quot;Distribution of FREE/WIN Words Between Spam and Ham&quot;)
+
+sns.barplot(
+    x=&quot;class&quot;,
+    y=&quot;Percentage of Group&quot;,
+    hue=&quot;is_free_or_win&quot;,
+    data=grouped_data, ax = axs[2,1]
+)
+
+
+# Contains url
+df[&quot;is_url&quot;] = df[&quot;text&quot;].apply(
+    lambda s: 1
+    if re.search(
+        r&quot;http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&amp;+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+&quot;,
+        s,
+    )
+    else 0
+)
+
+
+grouped_data = (
+    df.groupby(&quot;class&quot;)[&quot;is_url&quot;]
+    .value_counts(normalize=True)
+    .rename(&quot;Percentage of Group&quot;)
+    .reset_index()
+)
+
+axs[2,2].set_title(&quot;Distribution of URL Between Spam and Ham&quot;)
+
+sns.barplot(
+    x=&quot;class&quot;,
+    y=&quot;Percentage of Group&quot;,
+    hue=&quot;is_url&quot;,
+    data=grouped_data, ax = axs[2,2]
+)
+
+plt.savefig('assets/data_analysis.jpg')
+plt.show()
+</code></pre>
+<p><img src="output_10_0.png" alt="png"></p>
+<h2 id="4-data-preprocessing">4. Data Preprocessing</h2>
+<pre><code class="language-python">df[&quot;text&quot;] = df[&quot;text&quot;].apply(
+    lambda row: re.sub(r&quot;[^a-zA-Z]+&quot;, &quot; &quot;, row)  
+)
+
+df[&quot;text&quot;].head()
+</code></pre>
+<pre><code>0    Go until jurong point crazy Available only in ...
+1    SMSSERVICES for yourinclusive text credits pls...
+2     p alfie Moon s Children in need song on ur mo...
+3    U have a secret admirer REVEAL who thinks U R ...
+4    Dear Voucher Holder To claim this weeks offer ...
+Name: text, dtype: object
+</code></pre>
+<pre><code class="language-python">df[&quot;text&quot;] = df[&quot;text&quot;].apply(lambda row: word_tokenize(row))
+df[&quot;text&quot;].head()
+</code></pre>
+<pre><code>0    [Go, until, jurong, point, crazy, Available, o...
+1    [SMSSERVICES, for, yourinclusive, text, credit...
+2    [p, alfie, Moon, s, Children, in, need, song, ...
+3    [U, have, a, secret, admirer, REVEAL, who, thi...
+4    [Dear, Voucher, Holder, To, claim, this, weeks...
+Name: text, dtype: object
+</code></pre>
+<pre><code class="language-python">df[&quot;text&quot;] = df[&quot;text&quot;].apply(
+    lambda row: [
+        token for token in row if token not in set(stopwords.words(&quot;english&quot;))
+    ]
+)
+df[&quot;text&quot;].head()
+</code></pre>
+<pre><code>0    [Go, jurong, point, crazy, Available, bugis, n...
+1    [SMSSERVICES, yourinclusive, text, credits, pl...
+2    [p, alfie, Moon, Children, need, song, ur, mob...
+3    [U, secret, admirer, REVEAL, thinks, U, R, So,...
+4    [Dear, Voucher, Holder, To, claim, weeks, offe...
+Name: text, dtype: object
+</code></pre>
+<pre><code class="language-python">df[&quot;text&quot;] = df[&quot;text&quot;].apply(
+    lambda row: &quot; &quot;.join([WordNetLemmatizer().lemmatize(word) for word in row])
+)
+df[&quot;text&quot;].head()
+</code></pre>
+<pre><code>0    Go jurong point crazy Available bugis n great ...
+1    SMSSERVICES yourinclusive text credit pls goto...
+2    p alfie Moon Children need song ur mob Tell ur...
+3    U secret admirer REVEAL think U R So special C...
+4    Dear Voucher Holder To claim week offer PC ple...
+Name: text, dtype: object
+</code></pre>
+<pre><code class="language-python">df.loc[df['class'] == &quot;ham&quot;, &quot;class&quot;] = 0
+df.loc[df['class'] == &quot;spam&quot;, &quot;class&quot;] = 1
+</code></pre>
+<pre><code class="language-python">df.head(10)
+</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+</code></pre>
+<p></style></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>class</th>
+      <th>text</th>
+      <th>message_len</th>
+      <th>nwords</th>
+      <th>nupperwords</th>
+      <th>nupperchars</th>
+      <th>is_free_or_win</th>
+      <th>is_url</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>Go jurong point crazy Available bugis n great ...</td>
+      <td>111</td>
+      <td>20</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>SMSSERVICES yourinclusive text credit pls goto...</td>
+      <td>156</td>
+      <td>24</td>
+      <td>3</td>
+      <td>24</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>p alfie Moon Children need song ur mob Tell ur...</td>
+      <td>161</td>
+      <td>32</td>
+      <td>0</td>
+      <td>7</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>U secret admirer REVEAL think U R So special C...</td>
+      <td>147</td>
+      <td>28</td>
+      <td>3</td>
+      <td>24</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>Dear Voucher Holder To claim week offer PC ple...</td>
+      <td>152</td>
+      <td>31</td>
+      <td>2</td>
+      <td>13</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1</td>
+      <td>Do want anytime network min text NEW VIDEO pho...</td>
+      <td>149</td>
+      <td>28</td>
+      <td>2</td>
+      <td>9</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1</td>
+      <td>We tried contact offer New Video Phone anytime...</td>
+      <td>155</td>
+      <td>28</td>
+      <td>2</td>
+      <td>15</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>1</td>
+      <td>Last chance claim ur worth discount voucher Te...</td>
+      <td>160</td>
+      <td>31</td>
+      <td>2</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>1</td>
+      <td>Urgent call landline Your complimentary Ibiza ...</td>
+      <td>153</td>
+      <td>28</td>
+      <td>3</td>
+      <td>18</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1</td>
+      <td>Today Offer Claim ur worth discount voucher Te...</td>
+      <td>158</td>
+      <td>29</td>
+      <td>1</td>
+      <td>14</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code class="language-python">df['class'] = df['class'].astype(np.uint8)
+</code></pre>
+<pre><code class="language-python">df.describe()
+</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+</code></pre>
+<p></style></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>class</th>
+      <th>message_len</th>
+      <th>nwords</th>
+      <th>nupperwords</th>
+      <th>nupperchars</th>
+      <th>is_free_or_win</th>
+      <th>is_url</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>4725.000000</td>
+      <td>4725.000000</td>
+      <td>4725.000000</td>
+      <td>4725.000000</td>
+      <td>4725.000000</td>
+      <td>4725.000000</td>
+      <td>4725.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>0.132275</td>
+      <td>80.161270</td>
+      <td>16.180106</td>
+      <td>0.646138</td>
+      <td>5.679788</td>
+      <td>0.071111</td>
+      <td>0.003175</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.338825</td>
+      <td>60.559271</td>
+      <td>11.947438</td>
+      <td>2.551516</td>
+      <td>11.932286</td>
+      <td>0.257038</td>
+      <td>0.056260</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000</td>
+      <td>2.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>0.000000</td>
+      <td>36.000000</td>
+      <td>8.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>0.000000</td>
+      <td>61.000000</td>
+      <td>12.000000</td>
+      <td>0.000000</td>
+      <td>2.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>0.000000</td>
+      <td>121.000000</td>
+      <td>24.000000</td>
+      <td>0.000000</td>
+      <td>4.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>1.000000</td>
+      <td>910.000000</td>
+      <td>190.000000</td>
+      <td>32.000000</td>
+      <td>129.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code class="language-python">df.info()
+</code></pre>
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 4725 entries, 0 to 4724
+Data columns (total 8 columns):
+ #   Column          Non-Null Count  Dtype 
+---  ------          --------------  ----- 
+ 0   class           4725 non-null   uint8 
+ 1   text            4725 non-null   object
+ 2   message_len     4725 non-null   int64 
+ 3   nwords          4725 non-null   int64 
+ 4   nupperwords     4725 non-null   int64 
+ 5   nupperchars     4725 non-null   int64 
+ 6   is_free_or_win  4725 non-null   int64 
+ 7   is_url          4725 non-null   int64 
+dtypes: int64(6), object(1), uint8(1)
+memory usage: 263.1+ KB
+</code></pre>
+<pre><code class="language-python">X_train, X_val, y_train, y_val = train_test_split(
+    df[&quot;text&quot;], df[&quot;class&quot;], test_size=0.1, random_state = 0
+)
+
+
+
+print(f&quot;Training data: {len(X_train)} (90%)&quot;)
+print(f&quot;Testing data: {len(X_val)} (10%)&quot;)
+
+
+</code></pre>
+<pre><code>Training data: 4252 (90%)
+Testing data: 473 (10%)
+</code></pre>
+<h2 id="5-classic-ml">5. Classic ML</h2>
+<pre><code class="language-python">
+
+knn = GridSearchCV(
+    Pipeline(
+        [
+            (&quot;BagOfWords&quot;, CountVectorizer()),
+            (&quot;Tfidf&quot;, TfidfTransformer()),
+            (&quot;clf&quot;, KNeighborsClassifier())
+        ]
+    ),
+    {
+        &quot;clf__n_neighbors&quot;: (3,5,15,25,45,55),
+    }
+
+)
+
+mnbayes = GridSearchCV(
+    Pipeline(
+        [
+            (&quot;BagOfWords&quot;, CountVectorizer()),
+            (&quot;Tfidf&quot;, TfidfTransformer()),
+            (&quot;clf&quot;, MultinomialNB()),
+        ]
+    ),
+    {
+        &quot;clf__alpha&quot;: (0.1, 1e-2, 1e-3),
+        &quot;clf__fit_prior&quot;: (True, False),
+    },
+)
+
+svc = GridSearchCV(
+    Pipeline(
+        [
+            (&quot;BagOfWords&quot;, CountVectorizer()),
+            (&quot;Tfidf&quot;, TfidfTransformer()),
+            (&quot;clf&quot;, SVC(gamma=&quot;auto&quot;, C=1000)),
+        ]
+    ),
+    {
+        
+    }
+)
+
+
+ada = GridSearchCV(
+    Pipeline(
+        [
+            (&quot;BagOfWords&quot;, CountVectorizer()),
+            (&quot;Tfidf&quot;, TfidfTransformer()),
+            (&quot;clf&quot;, AdaBoostClassifier()),
+        ]
+    ),
+    {
+        &quot;clf__n_estimators&quot;: [100,200],
+        &quot;clf__learning_rate&quot;: [0.001, 0.01, 0.1, 0.2, 0.5]
+    }
+)
+
+rf = GridSearchCV(
+    Pipeline(
+        [
+            (&quot;BagOfWords&quot;, CountVectorizer()),
+            (&quot;Tfidf&quot;, TfidfTransformer()),
+            (&quot;clf&quot;, RandomForestClassifier()),
+        ]
+    ),
+    {
+        &quot;clf__criterion&quot; : [&quot;gini&quot;, &quot;entropy&quot;],
+        &quot;clf__max_depth&quot; :   [None, 1,3,5,10],
+        &quot;clf__min_samples_split&quot;: [5,10],
+        &quot;clf__min_samples_leaf&quot;: [5,10],
+        &quot;clf__n_estimators&quot;: [100, 150, 200]
+    }
+)
+
+xgb = GridSearchCV(
+    Pipeline(
+        [
+            (&quot;BagOfWords&quot;, CountVectorizer()),
+            (&quot;Tfidf&quot;, TfidfTransformer()),
+            (&quot;clf&quot;, XGBClassifier()),
+        ]
+    ),
+    {
+        'clf__max_depth': [3, 4, 5],
+        &quot;clf__n_estimators&quot;: [200, 500, 600]
+    }
+)
+
+
+models = {&quot;K-Nearest Neighbors&quot;: knn,
+          &quot;Multinomial Naive Bayes&quot;: mnbayes,
+          &quot;Support Vector Machine&quot;: svc,
+          &quot;AdaBoost&quot;: ada,
+          &quot;Random Forest&quot;: rf,
+          &quot;XGBoost&quot;: xgb
+         }
+
+results = []
+
+for model in models:
+    
+    print(&quot;\n&quot;,model)
+    
+    models[model].fit(X= X_train, y = y_train)
+    preds = models[model].predict(X_val)
+    
+    plt.figure(figsize=(10,4))
+
+    heatmap = sns.heatmap(
+        data = pd.DataFrame(confusion_matrix(y_val, preds)),
+        annot = True,
+        fmt = &quot;d&quot;,
+        cmap=sns.color_palette(&quot;Blues&quot;, 50),
+    )
+
+    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), fontsize=14)
+    heatmap.yaxis.set_ticklabels(
+        heatmap.yaxis.get_ticklabels(), rotation=0, fontsize=14
+    )
+
+    plt.title(&quot;Confusion Matrix&quot;)
+    plt.ylabel(&quot;Ground Truth&quot;)
+    plt.xlabel(&quot;Prediction&quot;)
+    
+    plt.show()
+    
+    precision = precision_score(y_val, preds)
+    recall = recall_score(y_val, preds)
+    acc = accuracy_score(y_val, preds)
+
+    print(f&quot;Precision: {precision * 100:.3f}%&quot;)
+    print(f&quot;   Recall: {recall * 100 :.3f}%&quot;)
+    print(f&quot; Accuracy: {acc * 100:.3f}%&quot;)
+    
+    results.append([model, precision, recall, acc])
+</code></pre>
+<pre><code> K-Nearest Neighbors
+</code></pre>
+<p><img src="output_25_1.png" alt="png"></p>
+<pre><code>Precision: 100.000%
+   Recall: 64.615%
+ Accuracy: 95.137%
+
+ Multinomial Naive Bayes
+</code></pre>
+<p><img src="output_25_3.png" alt="png"></p>
+<pre><code>Precision: 98.387%
+   Recall: 93.846%
+ Accuracy: 98.943%
+
+ Support Vector Machine
+</code></pre>
+<p><img src="output_25_5.png" alt="png"></p>
+<pre><code>Precision: 98.305%
+   Recall: 89.231%
+ Accuracy: 98.309%
+
+ AdaBoost
+</code></pre>
+<p><img src="output_25_7.png" alt="png"></p>
+<pre><code>Precision: 98.361%
+   Recall: 92.308%
+ Accuracy: 98.732%
+
+ Random Forest
+</code></pre>
+<p><img src="output_25_9.png" alt="png"></p>
+<pre><code>Precision: 98.148%
+   Recall: 81.538%
+ Accuracy: 97.252%
+
+ XGBoost
+</code></pre>
+<p><img src="output_25_11.png" alt="png"></p>
+<pre><code>Precision: 96.610%
+   Recall: 87.692%
+ Accuracy: 97.886%
+</code></pre>
+<h2 id="6-lstm">6. LSTM</h2>
+<pre><code class="language-python">max_words = 1000
+max_len = 150
+tok = Tokenizer(num_words=max_words)
+tok.fit_on_texts(X_train)
+sequences = tok.texts_to_sequences(X_train)
+sequences_matrix = sequence.pad_sequences(sequences, maxlen = max_len)
+</code></pre>
+<pre><code class="language-python">sequences_val = tok.texts_to_sequences(X_val)
+sequences_matrix_val = sequence.pad_sequences(sequences_val, maxlen = max_len)
+</code></pre>
+<pre><code class="language-python">def build_rnn():
+    
+    input_layer = layers.Input(shape = [max_len], name='Input_Layer')
+    
+    x = layers.Embedding(max_words, 50, input_length = max_len, name = &quot;Embedding_Layer&quot;)(input_layer)
+    x = layers.LSTM(64, activation = 'tanh', name = &quot;LSTM_Layer&quot;)(x)
+    x = layers.Dense(256, activation = 'relu', name = 'Dense_Layer_1')(x)
+    #x = layers.Dropout(0.5)(x)
+    output_layer = layers.Dense(1, activation='sigmoid',name = 'Output_Layer')(x)
+    
+    rnn = Model(inputs=input_layer, outputs=output_layer)
+    
+    return rnn
+</code></pre>
+<pre><code class="language-python">model = build_rnn()
+model.summary()
+keras.utils.plot_model(model, &quot;assets/simple_rnn.png&quot;, show_shapes=True)
+</code></pre>
+<pre><code>Model: &quot;model&quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+Input_Layer (InputLayer)     [(None, 150)]             0         
+_________________________________________________________________
+Embedding_Layer (Embedding)  (None, 150, 50)           50000     
+_________________________________________________________________
+LSTM_Layer (LSTM)            (None, 64)                29440     
+_________________________________________________________________
+Dense_Layer_1 (Dense)        (None, 256)               16640     
+_________________________________________________________________
+Output_Layer (Dense)         (None, 1)                 257       
+=================================================================
+Total params: 96,337
+Trainable params: 96,337
+Non-trainable params: 0
+_________________________________________________________________
+</code></pre>
+<p><img src="output_30_1.png" alt="png"></p>
+<pre><code class="language-python">model.compile(loss = 'binary_crossentropy', optimizer='adam',
+              metrics =['accuracy',keras.metrics.Precision(),keras.metrics.Recall()])
+</code></pre>
+<pre><code class="language-python">early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001)
+</code></pre>
+<pre><code class="language-python">hist = model.fit(sequences_matrix, y_train, batch_size = 128, epochs = 10,
+                 validation_data=(sequences_matrix_val, y_val))
+</code></pre>
+<pre><code class="language-python">epoch_loss = hist.history['loss']
+epoch_val_loss = hist.history['val_loss']
+
+epoch_acc = hist.history['accuracy']
+epoch_val_acc = hist.history['val_accuracy']
+
+epoch_precision = hist.history['precision']
+epoch_val_precision = hist.history['val_precision']
+
+epoch_recall = hist.history['recall']
+epoch_val_recall = hist.history['val_recall']
+
+
+fig, axs = plt.subplots(2,2, figsize = (16,16))
+
+plt.figure(figsize=(20,6))
+
+axs[0,0].plot(range(0,len(epoch_loss)), epoch_loss, 'b-', linewidth=2, label='Train Loss')
+axs[0,0].plot(range(0,len(epoch_val_loss)), epoch_val_loss, 'r-', linewidth=2, label='Val Loss')
+axs[0,0].set_title('Evolution of loss on train &amp; validation datasets over epochs')
+axs[0,0].legend(loc='best')
+
+
+axs[0,1].plot(range(0,len(epoch_acc)), epoch_acc, 'b-', linewidth=2, label='Train accuracy')
+axs[0,1].plot(range(0,len(epoch_val_acc)), epoch_val_acc, 'r-', linewidth=2,label='Val accuracy')
+axs[0,1].set_title('Evolution of accuracy on train &amp; validation datasets over epochs')
+axs[0,1].legend(loc='best')
+
+
+axs[1,0].plot(range(0,len(epoch_precision)), epoch_precision, 'b-', linewidth=2, label='Train precision')
+axs[1,0].plot(range(0,len(epoch_val_precision)), epoch_val_precision, 'r-', linewidth=2, label='Val precision')
+axs[1,0].set_title('Evolution of precision on train &amp; validation datasets over epochs')
+axs[1,0].legend(loc='best')
+
+
+axs[1,1].plot(range(0,len(epoch_recall)), epoch_recall, 'b-', linewidth=2, label='Train recall')
+axs[1,1].plot(range(0,len(epoch_val_recall)), epoch_val_recall, 'r-', linewidth=2,label='Val recall')
+axs[1,1].set_title('Evolution of recall on train &amp; validation datasets over epochs')
+axs[1,1].legend(loc='best')
+
+plt.show()
+</code></pre>
+<p><img src="output_34_0.png" alt="png"></p>
+<pre><code>&lt;Figure size 1440x432 with 0 Axes&gt;
+</code></pre>
+<pre><code class="language-python">preds = model.predict(sequences_matrix_val)
+preds = np.uint8(np.round(preds.T))
+</code></pre>
+<pre><code class="language-python">plt.figure(figsize=(10,4))
+
+heatmap = sns.heatmap(
+    data = pd.DataFrame(confusion_matrix(y_val.values, preds[0])),
+    annot = True,
+    fmt = &quot;d&quot;,
+    cmap=sns.color_palette(&quot;Blues&quot;, 50),
+)
+
+heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), fontsize=14)
+heatmap.yaxis.set_ticklabels(
+    heatmap.yaxis.get_ticklabels(), rotation=0, fontsize=14
+)
+
+plt.title(&quot;Confusion Matrix&quot;)
+plt.ylabel(&quot;Ground Truth&quot;)
+plt.xlabel(&quot;Prediction&quot;)
+
+plt.show()
+
+precision = precision_score(y_val.values, preds[0])
+recall = recall_score(y_val.values, preds[0])
+acc = accuracy_score(y_val.values, preds[0])
+
+print(f&quot;Precision: {precision * 100:.3f}%&quot;)
+print(f&quot;   Recall: {recall * 100 :.3f}%&quot;)
+print(f&quot; Accuracy: {acc * 100:.3f}%&quot;)
+
+results.append(['Simple RNN', precision, recall, acc])
+</code></pre>
+<p><img src="output_36_0.png" alt="png"></p>
+<pre><code>Precision: 96.875%
+   Recall: 95.385%
+ Accuracy: 98.943%
+</code></pre>
+<pre><code class="language-python">model.save(f'saved_models/my_model_{time.time()}.h5')
+</code></pre>
+<pre><code class="language-python">df_results = pd.DataFrame(results, columns=['Algorithm', 'Precision', 'Recall', 'Accuracy'])
+</code></pre>
+<pre><code class="language-python">df_results
+</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+</code></pre>
+<p></style></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Algorithm</th>
+      <th>Precision</th>
+      <th>Recall</th>
+      <th>Accuracy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>K-Nearest Neighbors</td>
+      <td>1.000000</td>
+      <td>0.646154</td>
+      <td>0.951374</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Multinomial Naive Bayes</td>
+      <td>0.983871</td>
+      <td>0.938462</td>
+      <td>0.989429</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Support Vector Machine</td>
+      <td>0.983051</td>
+      <td>0.892308</td>
+      <td>0.983087</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>AdaBoost</td>
+      <td>0.983607</td>
+      <td>0.923077</td>
+      <td>0.987315</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Random Forest</td>
+      <td>0.981481</td>
+      <td>0.815385</td>
+      <td>0.972516</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>XGBoost</td>
+      <td>0.966102</td>
+      <td>0.876923</td>
+      <td>0.978858</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Simple RNN</td>
+      <td>0.968750</td>
+      <td>0.953846</td>
+      <td>0.989429</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="evaluating-the-test">Evaluating the test</h2>
+<pre><code class="language-python">TEST_PATH = 'TestSet/sms-hamspam-test.csv'
+
+df_test = pd.read_csv(TEST_PATH,names = ['text'])
+df_test
+</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+</code></pre>
+<p></style></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>text</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>I know that my friend already told that.</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>It took Mr owl 3 licks</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Dunno y u ask me.</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>K.k:)advance happy pongal.</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>I know but you need to get hotel now. I just g...</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>842</th>
+      <td>Booked ticket for pongal?</td>
+    </tr>
+    <tr>
+      <th>843</th>
+      <td>Yes :)it completely in out of form:)clark also...</td>
+    </tr>
+    <tr>
+      <th>844</th>
+      <td>Yeah sure</td>
+    </tr>
+    <tr>
+      <th>845</th>
+      <td>He is there. You call and meet him</td>
+    </tr>
+    <tr>
+      <th>846</th>
+      <td>I see a cup of coffee animation</td>
+    </tr>
+  </tbody>
+</table>
+<p>847 rows × 1 columns</p>
+</div>
+<pre><code class="language-python">def apply_data_preprocessing(dataframe, column):
+    
+    df = dataframe.copy()
+    
+    df[column] = df[column].apply(
+        lambda row: re.sub(r&quot;[^a-zA-Z]+&quot;, &quot; &quot;, row)  
+    )
+    
+    df[column] = df[column].apply(lambda row: word_tokenize(row))
+    
+    df[column] = df[column].apply(
+        lambda row: [
+            token for token in row if token not in set(stopwords.words(&quot;english&quot;))
+        ]
+    )
+    
+    df[column] = df[column].apply(
+        lambda row: &quot; &quot;.join([WordNetLemmatizer().lemmatize(word) for word in row])
+    )
+    
+    X = df[column].values
+    
+    max_words = 1000
+    max_len = 150
+    tok = Tokenizer(num_words=max_words)
+    tok.fit_on_texts(X)
+    sequences = tok.texts_to_sequences(X)
+    sequences_matrix = sequence.pad_sequences(sequences, maxlen = max_len)
+    
+    return sequences_matrix
+</code></pre>
+<pre><code class="language-python">def classify(text_csv, column, model_path):
+    
+    df_test = pd.read_csv(text_csv,names = [column])
+    
+    sequences_matrix = apply_data_preprocessing(df_test, column)
+    
+    model = tf.keras.models.load_model(model_path)
+    
+    preds = model.predict(sequences_matrix)
+    preds = np.uint8(np.round(preds.T))
+    preds = preds[0]
+    
+    df_test['class'] = preds
+    
+    return df_test
+</code></pre>
+<h2 id="7-references">7. References</h2>
+<ul>
+<li><a href="https://www.kaggle.com/uciml/sms-spam-collection-dataset/notebooks" target="_blank" rel="noopener">SMS Spam Detection - Kaggle notebooks</a></li>
+</ul>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="/tag/natural-language-processing/">Natural Language Processing</a>
+  
+  <a class="badge badge-light" href="/tag/classification/">Classification</a>
+  
+  <a class="badge badge-light" href="/tag/machine-learning/">Machine Learning</a>
+  
+  <a class="badge badge-light" href="/tag/data-analysis/">Data Analysis</a>
+  
+  <a class="badge badge-light" href="/tag/lstm/">LSTM</a>
+  
+  <a class="badge badge-light" href="/tag/recurrent-neural-networks/">Recurrent Neural Networks</a>
+  
+  <a class="badge badge-light" href="/tag/deep-learning/">Deep Learning</a>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="https://jpvt.github.io/"><img class="avatar mr-3 avatar-circle" src="/authors/admin/avatar_hube61f6136e23a8f0841380d0415ceb4e_686757_270x270_fill_q75_lanczos_center.jpg" alt="João Pedro Vasconcelos Teixeira"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="https://jpvt.github.io/">João Pedro Vasconcelos Teixeira</a></h5>
+      <h6 class="card-subtitle">Undergraduate Researcher</h6>
+      <p class="card-text">My research interests include computer vision, natural language processing and machine learning</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/jpvt" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/jpvt/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>Related</h3>
+    <ul>
+      
+      <li><a href="/post/metro_traffic_volume/">Metro Interstate Traffic Volume Analysis</a></li>
+      
+      <li><a href="/post/documentcleanup/">Denoising Documents with Computer Vision and Digital Image Processing</a></li>
+      
+      <li><a href="/project/gandido/">GANdido Portinari</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+    <div class="project-related-pages content-widget-hr">
+      
+      
+
+      
+      
+      
+
+      
+      
+      
+
+      
+      
+      
+    </div>
+  </div>
+</article>
+  </div>
+
+  <div class="page-footer">
+    
+    
+    <div class="container">
+      <footer class="site-footer">
+
+  
+
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    
+    
+      
+      
+      
+      
+      
+      
+      Published with <a href="https://wowchemy.com/?utm_campaign=poweredby" target="_blank" rel="noopener">Wowchemy</a> — the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">open source</a> website builder that empowers creators.
+    
+  </p>
+</footer>
+
+    </div>
+    
+  </div>
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      
+
+      
+      
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+      
+      <script id="search-hit-fuse-template" type="text/x-template">
+        <div class="search-hit" id="summary-{{key}}">
+          <div class="search-hit-content">
+            <div class="search-hit-name">
+              <a href="{{relpermalink}}">{{title}}</a>
+              <div class="article-metadata search-hit-type">{{type}}</div>
+              <p class="search-hit-description">{{snippet}}</p>
+            </div>
+          </div>
+        </div>
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+      
+    
+
+    
+    
+
+    
+    
+    
+    
+
+    
+    <script src="/js/bootstrap.bundle.min.6aed84840afc03ab4d5750157f69c120.js"></script>
+
+    
+    
+      
+      
+      
+      
+      
+      
+      
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+      
+      
+    
+    
+    <script src="/en/js/wowchemy.min.b61a8f62b6e5c0cd322c8158c5b5dfb6.js"></script>
+
+    
+
+
+
+
+
+
+</body>
+</html>

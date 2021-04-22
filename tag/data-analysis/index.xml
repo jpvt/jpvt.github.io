@@ -1,0 +1,2786 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data Analysis | João Pedro Vasconcelos</title>
+    <link>https://jpvt.github.io/tag/data-analysis/</link>
+      <atom:link href="https://jpvt.github.io/tag/data-analysis/index.xml" rel="self" type="application/rss+xml" />
+    <description>Data Analysis</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 07 Dec 2020 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://jpvt.github.io/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_512x512_fill_lanczos_center_2.png</url>
+      <title>Data Analysis</title>
+      <link>https://jpvt.github.io/tag/data-analysis/</link>
+    </image>
+    
+    <item>
+      <title>SMS Spam Detection with Machine Learning</title>
+      <link>https://jpvt.github.io/project/smsspamdetection/</link>
+      <pubDate>Mon, 07 Dec 2020 00:00:00 +0000</pubDate>
+      <guid>https://jpvt.github.io/project/smsspamdetection/</guid>
+      <description>&lt;h2 id=&#34;table-of-contents&#34;&gt;Table of Contents&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Description&lt;/li&gt;
+&lt;li&gt;Requirements&lt;/li&gt;
+&lt;li&gt;Data Analysis and Feature Engineering&lt;/li&gt;
+&lt;li&gt;Data preprocessing&lt;/li&gt;
+&lt;li&gt;Classic ML&lt;/li&gt;
+&lt;li&gt;LSTM&lt;/li&gt;
+&lt;li&gt;References&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;1-description&#34;&gt;1. Description&lt;/h2&gt;
+&lt;p&gt;The SMS Ham-Spam detection dataset is a set of SMS tagged messages that have been collected for SMS Spam research. It contains a set of 5,574 SMS messages in English, considering both train and test data. The tagging standard was defined as &lt;code&gt;ham&lt;/code&gt; (legitimate) or &lt;code&gt;spam&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;train&lt;/code&gt; and &lt;code&gt;test&lt;/code&gt; files are formatted using the standard of one message per line. Each line is composed by two columns: one with label (&lt;code&gt;ham&lt;/code&gt; or &lt;code&gt;spam&lt;/code&gt;) and other with the raw text. Here are some examples:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;ham   What you doing?how are you?
+ham   Ok lar... Joking wif u oni...
+ham   dun say so early hor... U c already then say...
+ham   MY NO. IN LUTON 0125698789 RING ME IF UR AROUND! H*
+ham   Siva is in hostel aha:-.
+ham   Cos i was out shopping wif darren jus now n i called him 2 ask wat present he wan lor. Then he started guessing who i was wif n he finally guessed darren lor.
+spam   FreeMsg: Txt: CALL to No: 86888 &amp;amp; claim your reward of 3 hours talk time to use from your phone now! ubscribe6GBP/ mnth inc 3hrs 16 stop?txtStop
+spam   Sunshine Quiz! Win a super Sony DVD recorder if you canname the capital of Australia? Text MQUIZ to 82277. B
+spam   URGENT! Your Mobile No 07808726822 was awarded a L2,000 Bonus Caller Prize on 02/09/03! This is our 2nd attempt to contact YOU! Call 0871-872-9758 BOX95QU
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;Note: messages are not chronologically sorted.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For evaluation purposes, the &lt;code&gt;test&lt;/code&gt; dataset does not prosent the categories (&lt;code&gt;ham&lt;/code&gt;, &lt;code&gt;spam&lt;/code&gt;). Therefore, the &lt;code&gt;train&lt;/code&gt; data is the full source of information for this test.&lt;/p&gt;
+&lt;p&gt;The goal of the this test is to achieve a model that can correctly manage the incoming messages on SMS format (&lt;code&gt;ham&lt;/code&gt; or &lt;code&gt;spam&lt;/code&gt;). Considering a real scenario, assume that a regular person does not want to see a &lt;code&gt;spam&lt;/code&gt; message. However, they accepts if a normal message (&lt;code&gt;ham&lt;/code&gt;) is sometimes allocated at the &lt;code&gt;spam&lt;/code&gt; box.&lt;/p&gt;
+&lt;h2 id=&#34;2-requirements&#34;&gt;2. Requirements&lt;/h2&gt;
+&lt;p&gt;Assuming that you have a clean enviroment to run this jupyter notebook, create a new code block, copy and paste the following code and run it:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-py&#34;&gt;!pip install numpy
+!pip install matplotlib
+!pip install tensorflow
+!pip install scikit-learn
+!pip install nltk
+!pip install transformers
+!pip install seaborn
+!pip install xgboost
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#################################################################################################
+
+import re
+from collections import Counter
+import time
+
+#################################################################################################
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+#################################################################################################
+
+from sklearn import feature_extraction
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.pipeline import Pipeline
+from transformers import TFTrainer, TFTrainingArguments
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from xgboost import XGBClassifier
+
+#################################################################################################
+
+import nltk
+from nltk import WordNetLemmatizer
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+#################################################################################################
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import Sequential, Model, layers
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing import sequence
+from tensorflow.keras.callbacks import EarlyStopping
+
+#################################################################################################
+
+gpu = len(tf.config.list_physical_devices(&#39;GPU&#39;))&amp;gt;0
+
+if gpu:
+    print(&amp;quot;GPU is&amp;quot;, &amp;quot;available&amp;quot;)
+    physical_devices = tf.config.list_physical_devices(&#39;GPU&#39;)
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+else:
+    print(&amp;quot;NOT AVAILABLE&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;nltk.download(&amp;quot;punkt&amp;quot;)
+nltk.download(&amp;quot;stopwords&amp;quot;)
+nltk.download(&amp;quot;wordnet&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;3-data-analysis-and-feature-engineering&#34;&gt;3. Data Analysis and Feature Engineering&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;TRAIN_PATH = &#39;TrainingSet/sms-hamspam-train.csv&#39;
+
+df = pd.read_csv(TRAIN_PATH,names = [&#39;class&#39;,&#39;text&#39;], delimiter = &#39;\t&#39;)
+
+df
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;class&lt;/th&gt;
+      &lt;th&gt;text&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;ham&lt;/td&gt;
+      &lt;td&gt;Go until jurong point, crazy.. Available only ...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;spam&lt;/td&gt;
+      &lt;td&gt;SMSSERVICES. for yourinclusive text credits, p...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;spam&lt;/td&gt;
+      &lt;td&gt;25p 4 alfie Moon&#39;s Children in need song on ur...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;spam&lt;/td&gt;
+      &lt;td&gt;U have a secret admirer. REVEAL who thinks U R...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;spam&lt;/td&gt;
+      &lt;td&gt;Dear Voucher Holder, To claim this weeks offer...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;...&lt;/th&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4720&lt;/th&gt;
+      &lt;td&gt;spam&lt;/td&gt;
+      &lt;td&gt;This is the 2nd time we have tried 2 contact u...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4721&lt;/th&gt;
+      &lt;td&gt;ham&lt;/td&gt;
+      &lt;td&gt;Will ü b going to esplanade fr home?&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4722&lt;/th&gt;
+      &lt;td&gt;ham&lt;/td&gt;
+      &lt;td&gt;Pity, * was in mood for that. So...any other s...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4723&lt;/th&gt;
+      &lt;td&gt;ham&lt;/td&gt;
+      &lt;td&gt;The guy did some bitching but I acted like i&#39;d...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4724&lt;/th&gt;
+      &lt;td&gt;ham&lt;/td&gt;
+      &lt;td&gt;Rofl. Its true to its name&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;4725 rows × 2 columns&lt;/p&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;fig, axs = plt.subplots(3, 3, figsize =  (16,16))
+
+# Class Distribution
+class_value_counts = df[&#39;class&#39;].value_counts(sort = True)
+
+# Plot
+axs[0,0].set_title(&amp;quot;Class Distribution&amp;quot;)
+axs[0,0].pie(class_value_counts, labels = class_value_counts.index, autopct = &amp;quot;%1.0f%%&amp;quot;)
+axs[0,0].axis(&#39;off&#39;)
+
+
+# Word Frequency
+most_common_ham = pd.DataFrame.from_dict(
+    
+    Counter(&amp;quot; &amp;quot;.join(df.loc[df[&amp;quot;class&amp;quot;]== &amp;quot;ham&amp;quot;][&amp;quot;text&amp;quot;]).split()).most_common(10)
+)
+
+most_common_ham = most_common_ham.rename(columns={0: &amp;quot;word_in_ham&amp;quot;, 1 : &amp;quot;frequency&amp;quot;})
+
+
+most_common_spam = pd.DataFrame.from_dict(
+    
+    Counter(&amp;quot; &amp;quot;.join(df.loc[df[&amp;quot;class&amp;quot;]== &amp;quot;spam&amp;quot;][&amp;quot;text&amp;quot;]).split()).most_common(10)
+)
+
+most_common_spam = most_common_spam.rename(columns={0: &amp;quot;word_in_spam&amp;quot;, 1 : &amp;quot;frequency&amp;quot;})
+
+axs[0,1].set_title(&amp;quot;Word Frequency in Ham SMS&amp;quot;)
+axs[0,1].bar(most_common_ham[&amp;quot;word_in_ham&amp;quot;], most_common_ham[&amp;quot;frequency&amp;quot;])
+axs[0,1].set_xticks(np.arange(len(most_common_ham[&amp;quot;word_in_ham&amp;quot;])))
+axs[0,1].set_xticklabels(most_common_ham[&amp;quot;word_in_ham&amp;quot;])
+axs[0,1].set_xlabel(&amp;quot;Words&amp;quot;)
+axs[0,1].set_ylabel(&amp;quot;Frequency&amp;quot;)
+
+axs[0,2].set_title(&amp;quot;Word Frequency in Spam SMS&amp;quot;)
+axs[0,2].bar(most_common_spam[&amp;quot;word_in_spam&amp;quot;], most_common_spam[&amp;quot;frequency&amp;quot;], color = &#39;orange&#39;)
+axs[0,2].set_xticks(np.arange(len(most_common_spam[&amp;quot;word_in_spam&amp;quot;])))
+axs[0,1].set_xticklabels(most_common_spam[&amp;quot;word_in_spam&amp;quot;])
+axs[0,2].set_xlabel(&amp;quot;Words&amp;quot;)
+axs[0,2].set_ylabel(&amp;quot;Frequency&amp;quot;)
+
+# Length
+df[&amp;quot;message_len&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(len)
+
+sns.kdeplot(
+    df.loc[df[&#39;class&#39;] == &amp;quot;ham&amp;quot;, &amp;quot;message_len&amp;quot;],
+    shade=True,
+    label=&amp;quot;Ham&amp;quot;,
+    clip=(-50, 250), ax = axs[1,0]
+)
+sns.kdeplot(df.loc[df[&#39;class&#39;] == &amp;quot;spam&amp;quot;, &amp;quot;message_len&amp;quot;], shade=True, label=&amp;quot;Spam&amp;quot;,ax = axs[1,0])
+axs[1,0].set(
+    xlabel=&amp;quot;Length&amp;quot;,
+    ylabel=&amp;quot;Density&amp;quot;,
+    title=&amp;quot;Length of SMS.&amp;quot;,
+)
+axs[1,0].legend(loc=&amp;quot;upper right&amp;quot;)
+
+
+# Number of Words
+df[&amp;quot;nwords&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(lambda s: len(re.findall(r&amp;quot;\w+&amp;quot;, s)))
+
+sns.kdeplot(
+    df.loc[df[&#39;class&#39;] == &amp;quot;ham&amp;quot;, &amp;quot;nwords&amp;quot;],
+    shade=True,
+    label=&amp;quot;Ham&amp;quot;,
+    clip=(-10, 50), ax = axs[1,1]
+)
+sns.kdeplot(df.loc[df[&#39;class&#39;] == &amp;quot;spam&amp;quot;, &amp;quot;nwords&amp;quot;], shade=True, label=&amp;quot;Spam&amp;quot;, ax = axs[1,1])
+
+axs[1,1].set(
+    xlabel=&amp;quot;Words&amp;quot;,
+    ylabel=&amp;quot;Density&amp;quot;,
+    title=&amp;quot;Number of Words in SMS.&amp;quot;,
+)
+axs[1,1].legend(loc=&amp;quot;upper right&amp;quot;)
+
+
+# Number of Uppercased Words
+df[&amp;quot;nupperwords&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda s: len(re.findall(r&amp;quot;\b[A-Z][A-Z]+\b&amp;quot;, s))
+)
+sns.kdeplot(
+    df.loc[df[&#39;class&#39;] == &amp;quot;ham&amp;quot;, &amp;quot;nupperwords&amp;quot;],
+    shade=True,
+    label=&amp;quot;Ham&amp;quot;,
+    clip=(0, 35), ax = axs[1,2]
+)
+sns.kdeplot(df.loc[df[&#39;class&#39;] == &amp;quot;spam&amp;quot;, &amp;quot;nupperwords&amp;quot;], shade=True, label=&amp;quot;Spam&amp;quot;, ax = axs[1,2])
+axs[1,2].set(
+    xlabel=&amp;quot;Uppercased Words&amp;quot;,
+    ylabel=&amp;quot;Density&amp;quot;,
+    title=&amp;quot;Number of Uppercased Words.&amp;quot;,
+)
+axs[1,2].legend(loc=&amp;quot;upper right&amp;quot;)
+
+# Number of Uppercased Characters
+df[&amp;quot;nupperchars&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda s: sum(1 for c in s if c.isupper())
+)
+
+sns.scatterplot(x=&amp;quot;message_len&amp;quot;, y=&amp;quot;nupperchars&amp;quot;, hue=&amp;quot;class&amp;quot;, data=df, ax = axs[2,0])
+axs[2,0].set(
+    xlabel=&amp;quot;Characters&amp;quot;,
+    ylabel=&amp;quot;Uppercase Characters&amp;quot;,
+    title=&amp;quot;Number of Uppercased Characters in SMS.&amp;quot;,
+)
+axs[2,0].legend(loc=&amp;quot;upper right&amp;quot;)
+
+
+# Contains free or win
+df[&amp;quot;is_free_or_win&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda s: int(&amp;quot;free&amp;quot; in s.lower() or &amp;quot;win&amp;quot; in s.lower())
+)
+
+
+grouped_data = (
+    df.groupby(&amp;quot;class&amp;quot;)[&amp;quot;is_free_or_win&amp;quot;]
+    .value_counts(normalize=True)
+    .rename(&amp;quot;Percentage of Group&amp;quot;)
+    .reset_index()
+)
+
+axs[2,1].set_title(&amp;quot;Distribution of FREE/WIN Words Between Spam and Ham&amp;quot;)
+
+sns.barplot(
+    x=&amp;quot;class&amp;quot;,
+    y=&amp;quot;Percentage of Group&amp;quot;,
+    hue=&amp;quot;is_free_or_win&amp;quot;,
+    data=grouped_data, ax = axs[2,1]
+)
+
+
+# Contains url
+df[&amp;quot;is_url&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda s: 1
+    if re.search(
+        r&amp;quot;http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&amp;amp;+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+&amp;quot;,
+        s,
+    )
+    else 0
+)
+
+
+grouped_data = (
+    df.groupby(&amp;quot;class&amp;quot;)[&amp;quot;is_url&amp;quot;]
+    .value_counts(normalize=True)
+    .rename(&amp;quot;Percentage of Group&amp;quot;)
+    .reset_index()
+)
+
+axs[2,2].set_title(&amp;quot;Distribution of URL Between Spam and Ham&amp;quot;)
+
+sns.barplot(
+    x=&amp;quot;class&amp;quot;,
+    y=&amp;quot;Percentage of Group&amp;quot;,
+    hue=&amp;quot;is_url&amp;quot;,
+    data=grouped_data, ax = axs[2,2]
+)
+
+plt.savefig(&#39;assets/data_analysis.jpg&#39;)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_10_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-data-preprocessing&#34;&gt;4. Data Preprocessing&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df[&amp;quot;text&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda row: re.sub(r&amp;quot;[^a-zA-Z]+&amp;quot;, &amp;quot; &amp;quot;, row)  
+)
+
+df[&amp;quot;text&amp;quot;].head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;0    Go until jurong point crazy Available only in ...
+1    SMSSERVICES for yourinclusive text credits pls...
+2     p alfie Moon s Children in need song on ur mo...
+3    U have a secret admirer REVEAL who thinks U R ...
+4    Dear Voucher Holder To claim this weeks offer ...
+Name: text, dtype: object
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df[&amp;quot;text&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(lambda row: word_tokenize(row))
+df[&amp;quot;text&amp;quot;].head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;0    [Go, until, jurong, point, crazy, Available, o...
+1    [SMSSERVICES, for, yourinclusive, text, credit...
+2    [p, alfie, Moon, s, Children, in, need, song, ...
+3    [U, have, a, secret, admirer, REVEAL, who, thi...
+4    [Dear, Voucher, Holder, To, claim, this, weeks...
+Name: text, dtype: object
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df[&amp;quot;text&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda row: [
+        token for token in row if token not in set(stopwords.words(&amp;quot;english&amp;quot;))
+    ]
+)
+df[&amp;quot;text&amp;quot;].head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;0    [Go, jurong, point, crazy, Available, bugis, n...
+1    [SMSSERVICES, yourinclusive, text, credits, pl...
+2    [p, alfie, Moon, Children, need, song, ur, mob...
+3    [U, secret, admirer, REVEAL, thinks, U, R, So,...
+4    [Dear, Voucher, Holder, To, claim, weeks, offe...
+Name: text, dtype: object
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df[&amp;quot;text&amp;quot;] = df[&amp;quot;text&amp;quot;].apply(
+    lambda row: &amp;quot; &amp;quot;.join([WordNetLemmatizer().lemmatize(word) for word in row])
+)
+df[&amp;quot;text&amp;quot;].head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;0    Go jurong point crazy Available bugis n great ...
+1    SMSSERVICES yourinclusive text credit pls goto...
+2    p alfie Moon Children need song ur mob Tell ur...
+3    U secret admirer REVEAL think U R So special C...
+4    Dear Voucher Holder To claim week offer PC ple...
+Name: text, dtype: object
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.loc[df[&#39;class&#39;] == &amp;quot;ham&amp;quot;, &amp;quot;class&amp;quot;] = 0
+df.loc[df[&#39;class&#39;] == &amp;quot;spam&amp;quot;, &amp;quot;class&amp;quot;] = 1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.head(10)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;class&lt;/th&gt;
+      &lt;th&gt;text&lt;/th&gt;
+      &lt;th&gt;message_len&lt;/th&gt;
+      &lt;th&gt;nwords&lt;/th&gt;
+      &lt;th&gt;nupperwords&lt;/th&gt;
+      &lt;th&gt;nupperchars&lt;/th&gt;
+      &lt;th&gt;is_free_or_win&lt;/th&gt;
+      &lt;th&gt;is_url&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;Go jurong point crazy Available bugis n great ...&lt;/td&gt;
+      &lt;td&gt;111&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;SMSSERVICES yourinclusive text credit pls goto...&lt;/td&gt;
+      &lt;td&gt;156&lt;/td&gt;
+      &lt;td&gt;24&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+      &lt;td&gt;24&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;p alfie Moon Children need song ur mob Tell ur...&lt;/td&gt;
+      &lt;td&gt;161&lt;/td&gt;
+      &lt;td&gt;32&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;7&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;U secret admirer REVEAL think U R So special C...&lt;/td&gt;
+      &lt;td&gt;147&lt;/td&gt;
+      &lt;td&gt;28&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+      &lt;td&gt;24&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Dear Voucher Holder To claim week offer PC ple...&lt;/td&gt;
+      &lt;td&gt;152&lt;/td&gt;
+      &lt;td&gt;31&lt;/td&gt;
+      &lt;td&gt;2&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;5&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Do want anytime network min text NEW VIDEO pho...&lt;/td&gt;
+      &lt;td&gt;149&lt;/td&gt;
+      &lt;td&gt;28&lt;/td&gt;
+      &lt;td&gt;2&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;6&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;We tried contact offer New Video Phone anytime...&lt;/td&gt;
+      &lt;td&gt;155&lt;/td&gt;
+      &lt;td&gt;28&lt;/td&gt;
+      &lt;td&gt;2&lt;/td&gt;
+      &lt;td&gt;15&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;7&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Last chance claim ur worth discount voucher Te...&lt;/td&gt;
+      &lt;td&gt;160&lt;/td&gt;
+      &lt;td&gt;31&lt;/td&gt;
+      &lt;td&gt;2&lt;/td&gt;
+      &lt;td&gt;16&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;8&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Urgent call landline Your complimentary Ibiza ...&lt;/td&gt;
+      &lt;td&gt;153&lt;/td&gt;
+      &lt;td&gt;28&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+      &lt;td&gt;18&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;9&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Today Offer Claim ur worth discount voucher Te...&lt;/td&gt;
+      &lt;td&gt;158&lt;/td&gt;
+      &lt;td&gt;29&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df[&#39;class&#39;] = df[&#39;class&#39;].astype(np.uint8)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.describe()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;class&lt;/th&gt;
+      &lt;th&gt;message_len&lt;/th&gt;
+      &lt;th&gt;nwords&lt;/th&gt;
+      &lt;th&gt;nupperwords&lt;/th&gt;
+      &lt;th&gt;nupperchars&lt;/th&gt;
+      &lt;th&gt;is_free_or_win&lt;/th&gt;
+      &lt;th&gt;is_url&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;count&lt;/th&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+      &lt;td&gt;4725.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;mean&lt;/th&gt;
+      &lt;td&gt;0.132275&lt;/td&gt;
+      &lt;td&gt;80.161270&lt;/td&gt;
+      &lt;td&gt;16.180106&lt;/td&gt;
+      &lt;td&gt;0.646138&lt;/td&gt;
+      &lt;td&gt;5.679788&lt;/td&gt;
+      &lt;td&gt;0.071111&lt;/td&gt;
+      &lt;td&gt;0.003175&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;std&lt;/th&gt;
+      &lt;td&gt;0.338825&lt;/td&gt;
+      &lt;td&gt;60.559271&lt;/td&gt;
+      &lt;td&gt;11.947438&lt;/td&gt;
+      &lt;td&gt;2.551516&lt;/td&gt;
+      &lt;td&gt;11.932286&lt;/td&gt;
+      &lt;td&gt;0.257038&lt;/td&gt;
+      &lt;td&gt;0.056260&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;min&lt;/th&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;2.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;25%&lt;/th&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;36.000000&lt;/td&gt;
+      &lt;td&gt;8.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;1.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;50%&lt;/th&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;61.000000&lt;/td&gt;
+      &lt;td&gt;12.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;2.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;75%&lt;/th&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;121.000000&lt;/td&gt;
+      &lt;td&gt;24.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;4.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;max&lt;/th&gt;
+      &lt;td&gt;1.000000&lt;/td&gt;
+      &lt;td&gt;910.000000&lt;/td&gt;
+      &lt;td&gt;190.000000&lt;/td&gt;
+      &lt;td&gt;32.000000&lt;/td&gt;
+      &lt;td&gt;129.000000&lt;/td&gt;
+      &lt;td&gt;1.000000&lt;/td&gt;
+      &lt;td&gt;1.000000&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.info()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;class &#39;pandas.core.frame.DataFrame&#39;&amp;gt;
+RangeIndex: 4725 entries, 0 to 4724
+Data columns (total 8 columns):
+ #   Column          Non-Null Count  Dtype 
+---  ------          --------------  ----- 
+ 0   class           4725 non-null   uint8 
+ 1   text            4725 non-null   object
+ 2   message_len     4725 non-null   int64 
+ 3   nwords          4725 non-null   int64 
+ 4   nupperwords     4725 non-null   int64 
+ 5   nupperchars     4725 non-null   int64 
+ 6   is_free_or_win  4725 non-null   int64 
+ 7   is_url          4725 non-null   int64 
+dtypes: int64(6), object(1), uint8(1)
+memory usage: 263.1+ KB
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;X_train, X_val, y_train, y_val = train_test_split(
+    df[&amp;quot;text&amp;quot;], df[&amp;quot;class&amp;quot;], test_size=0.1, random_state = 0
+)
+
+
+
+print(f&amp;quot;Training data: {len(X_train)} (90%)&amp;quot;)
+print(f&amp;quot;Testing data: {len(X_val)} (10%)&amp;quot;)
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;Training data: 4252 (90%)
+Testing data: 473 (10%)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;5-classic-ml&#34;&gt;5. Classic ML&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+
+knn = GridSearchCV(
+    Pipeline(
+        [
+            (&amp;quot;BagOfWords&amp;quot;, CountVectorizer()),
+            (&amp;quot;Tfidf&amp;quot;, TfidfTransformer()),
+            (&amp;quot;clf&amp;quot;, KNeighborsClassifier())
+        ]
+    ),
+    {
+        &amp;quot;clf__n_neighbors&amp;quot;: (3,5,15,25,45,55),
+    }
+
+)
+
+mnbayes = GridSearchCV(
+    Pipeline(
+        [
+            (&amp;quot;BagOfWords&amp;quot;, CountVectorizer()),
+            (&amp;quot;Tfidf&amp;quot;, TfidfTransformer()),
+            (&amp;quot;clf&amp;quot;, MultinomialNB()),
+        ]
+    ),
+    {
+        &amp;quot;clf__alpha&amp;quot;: (0.1, 1e-2, 1e-3),
+        &amp;quot;clf__fit_prior&amp;quot;: (True, False),
+    },
+)
+
+svc = GridSearchCV(
+    Pipeline(
+        [
+            (&amp;quot;BagOfWords&amp;quot;, CountVectorizer()),
+            (&amp;quot;Tfidf&amp;quot;, TfidfTransformer()),
+            (&amp;quot;clf&amp;quot;, SVC(gamma=&amp;quot;auto&amp;quot;, C=1000)),
+        ]
+    ),
+    {
+        
+    }
+)
+
+
+ada = GridSearchCV(
+    Pipeline(
+        [
+            (&amp;quot;BagOfWords&amp;quot;, CountVectorizer()),
+            (&amp;quot;Tfidf&amp;quot;, TfidfTransformer()),
+            (&amp;quot;clf&amp;quot;, AdaBoostClassifier()),
+        ]
+    ),
+    {
+        &amp;quot;clf__n_estimators&amp;quot;: [100,200],
+        &amp;quot;clf__learning_rate&amp;quot;: [0.001, 0.01, 0.1, 0.2, 0.5]
+    }
+)
+
+rf = GridSearchCV(
+    Pipeline(
+        [
+            (&amp;quot;BagOfWords&amp;quot;, CountVectorizer()),
+            (&amp;quot;Tfidf&amp;quot;, TfidfTransformer()),
+            (&amp;quot;clf&amp;quot;, RandomForestClassifier()),
+        ]
+    ),
+    {
+        &amp;quot;clf__criterion&amp;quot; : [&amp;quot;gini&amp;quot;, &amp;quot;entropy&amp;quot;],
+        &amp;quot;clf__max_depth&amp;quot; :   [None, 1,3,5,10],
+        &amp;quot;clf__min_samples_split&amp;quot;: [5,10],
+        &amp;quot;clf__min_samples_leaf&amp;quot;: [5,10],
+        &amp;quot;clf__n_estimators&amp;quot;: [100, 150, 200]
+    }
+)
+
+xgb = GridSearchCV(
+    Pipeline(
+        [
+            (&amp;quot;BagOfWords&amp;quot;, CountVectorizer()),
+            (&amp;quot;Tfidf&amp;quot;, TfidfTransformer()),
+            (&amp;quot;clf&amp;quot;, XGBClassifier()),
+        ]
+    ),
+    {
+        &#39;clf__max_depth&#39;: [3, 4, 5],
+        &amp;quot;clf__n_estimators&amp;quot;: [200, 500, 600]
+    }
+)
+
+
+models = {&amp;quot;K-Nearest Neighbors&amp;quot;: knn,
+          &amp;quot;Multinomial Naive Bayes&amp;quot;: mnbayes,
+          &amp;quot;Support Vector Machine&amp;quot;: svc,
+          &amp;quot;AdaBoost&amp;quot;: ada,
+          &amp;quot;Random Forest&amp;quot;: rf,
+          &amp;quot;XGBoost&amp;quot;: xgb
+         }
+
+results = []
+
+for model in models:
+    
+    print(&amp;quot;\n&amp;quot;,model)
+    
+    models[model].fit(X= X_train, y = y_train)
+    preds = models[model].predict(X_val)
+    
+    plt.figure(figsize=(10,4))
+
+    heatmap = sns.heatmap(
+        data = pd.DataFrame(confusion_matrix(y_val, preds)),
+        annot = True,
+        fmt = &amp;quot;d&amp;quot;,
+        cmap=sns.color_palette(&amp;quot;Blues&amp;quot;, 50),
+    )
+
+    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), fontsize=14)
+    heatmap.yaxis.set_ticklabels(
+        heatmap.yaxis.get_ticklabels(), rotation=0, fontsize=14
+    )
+
+    plt.title(&amp;quot;Confusion Matrix&amp;quot;)
+    plt.ylabel(&amp;quot;Ground Truth&amp;quot;)
+    plt.xlabel(&amp;quot;Prediction&amp;quot;)
+    
+    plt.show()
+    
+    precision = precision_score(y_val, preds)
+    recall = recall_score(y_val, preds)
+    acc = accuracy_score(y_val, preds)
+
+    print(f&amp;quot;Precision: {precision * 100:.3f}%&amp;quot;)
+    print(f&amp;quot;   Recall: {recall * 100 :.3f}%&amp;quot;)
+    print(f&amp;quot; Accuracy: {acc * 100:.3f}%&amp;quot;)
+    
+    results.append([model, precision, recall, acc])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt; K-Nearest Neighbors
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_25_1.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 100.000%
+   Recall: 64.615%
+ Accuracy: 95.137%
+
+ Multinomial Naive Bayes
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_25_3.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 98.387%
+   Recall: 93.846%
+ Accuracy: 98.943%
+
+ Support Vector Machine
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_25_5.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 98.305%
+   Recall: 89.231%
+ Accuracy: 98.309%
+
+ AdaBoost
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_25_7.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 98.361%
+   Recall: 92.308%
+ Accuracy: 98.732%
+
+ Random Forest
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_25_9.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 98.148%
+   Recall: 81.538%
+ Accuracy: 97.252%
+
+ XGBoost
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_25_11.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 96.610%
+   Recall: 87.692%
+ Accuracy: 97.886%
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;6-lstm&#34;&gt;6. LSTM&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;max_words = 1000
+max_len = 150
+tok = Tokenizer(num_words=max_words)
+tok.fit_on_texts(X_train)
+sequences = tok.texts_to_sequences(X_train)
+sequences_matrix = sequence.pad_sequences(sequences, maxlen = max_len)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;sequences_val = tok.texts_to_sequences(X_val)
+sequences_matrix_val = sequence.pad_sequences(sequences_val, maxlen = max_len)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def build_rnn():
+    
+    input_layer = layers.Input(shape = [max_len], name=&#39;Input_Layer&#39;)
+    
+    x = layers.Embedding(max_words, 50, input_length = max_len, name = &amp;quot;Embedding_Layer&amp;quot;)(input_layer)
+    x = layers.LSTM(64, activation = &#39;tanh&#39;, name = &amp;quot;LSTM_Layer&amp;quot;)(x)
+    x = layers.Dense(256, activation = &#39;relu&#39;, name = &#39;Dense_Layer_1&#39;)(x)
+    #x = layers.Dropout(0.5)(x)
+    output_layer = layers.Dense(1, activation=&#39;sigmoid&#39;,name = &#39;Output_Layer&#39;)(x)
+    
+    rnn = Model(inputs=input_layer, outputs=output_layer)
+    
+    return rnn
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;model = build_rnn()
+model.summary()
+keras.utils.plot_model(model, &amp;quot;assets/simple_rnn.png&amp;quot;, show_shapes=True)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;Model: &amp;quot;model&amp;quot;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+Input_Layer (InputLayer)     [(None, 150)]             0         
+_________________________________________________________________
+Embedding_Layer (Embedding)  (None, 150, 50)           50000     
+_________________________________________________________________
+LSTM_Layer (LSTM)            (None, 64)                29440     
+_________________________________________________________________
+Dense_Layer_1 (Dense)        (None, 256)               16640     
+_________________________________________________________________
+Output_Layer (Dense)         (None, 1)                 257       
+=================================================================
+Total params: 96,337
+Trainable params: 96,337
+Non-trainable params: 0
+_________________________________________________________________
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_30_1.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;model.compile(loss = &#39;binary_crossentropy&#39;, optimizer=&#39;adam&#39;,
+              metrics =[&#39;accuracy&#39;,keras.metrics.Precision(),keras.metrics.Recall()])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;early_stopping = keras.callbacks.EarlyStopping(monitor=&#39;val_loss&#39;, min_delta=0.0001)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;hist = model.fit(sequences_matrix, y_train, batch_size = 128, epochs = 10,
+                 validation_data=(sequences_matrix_val, y_val))
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;epoch_loss = hist.history[&#39;loss&#39;]
+epoch_val_loss = hist.history[&#39;val_loss&#39;]
+
+epoch_acc = hist.history[&#39;accuracy&#39;]
+epoch_val_acc = hist.history[&#39;val_accuracy&#39;]
+
+epoch_precision = hist.history[&#39;precision&#39;]
+epoch_val_precision = hist.history[&#39;val_precision&#39;]
+
+epoch_recall = hist.history[&#39;recall&#39;]
+epoch_val_recall = hist.history[&#39;val_recall&#39;]
+
+
+fig, axs = plt.subplots(2,2, figsize = (16,16))
+
+plt.figure(figsize=(20,6))
+
+axs[0,0].plot(range(0,len(epoch_loss)), epoch_loss, &#39;b-&#39;, linewidth=2, label=&#39;Train Loss&#39;)
+axs[0,0].plot(range(0,len(epoch_val_loss)), epoch_val_loss, &#39;r-&#39;, linewidth=2, label=&#39;Val Loss&#39;)
+axs[0,0].set_title(&#39;Evolution of loss on train &amp;amp; validation datasets over epochs&#39;)
+axs[0,0].legend(loc=&#39;best&#39;)
+
+
+axs[0,1].plot(range(0,len(epoch_acc)), epoch_acc, &#39;b-&#39;, linewidth=2, label=&#39;Train accuracy&#39;)
+axs[0,1].plot(range(0,len(epoch_val_acc)), epoch_val_acc, &#39;r-&#39;, linewidth=2,label=&#39;Val accuracy&#39;)
+axs[0,1].set_title(&#39;Evolution of accuracy on train &amp;amp; validation datasets over epochs&#39;)
+axs[0,1].legend(loc=&#39;best&#39;)
+
+
+axs[1,0].plot(range(0,len(epoch_precision)), epoch_precision, &#39;b-&#39;, linewidth=2, label=&#39;Train precision&#39;)
+axs[1,0].plot(range(0,len(epoch_val_precision)), epoch_val_precision, &#39;r-&#39;, linewidth=2, label=&#39;Val precision&#39;)
+axs[1,0].set_title(&#39;Evolution of precision on train &amp;amp; validation datasets over epochs&#39;)
+axs[1,0].legend(loc=&#39;best&#39;)
+
+
+axs[1,1].plot(range(0,len(epoch_recall)), epoch_recall, &#39;b-&#39;, linewidth=2, label=&#39;Train recall&#39;)
+axs[1,1].plot(range(0,len(epoch_val_recall)), epoch_val_recall, &#39;r-&#39;, linewidth=2,label=&#39;Val recall&#39;)
+axs[1,1].set_title(&#39;Evolution of recall on train &amp;amp; validation datasets over epochs&#39;)
+axs[1,1].legend(loc=&#39;best&#39;)
+
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_34_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;Figure size 1440x432 with 0 Axes&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;preds = model.predict(sequences_matrix_val)
+preds = np.uint8(np.round(preds.T))
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;plt.figure(figsize=(10,4))
+
+heatmap = sns.heatmap(
+    data = pd.DataFrame(confusion_matrix(y_val.values, preds[0])),
+    annot = True,
+    fmt = &amp;quot;d&amp;quot;,
+    cmap=sns.color_palette(&amp;quot;Blues&amp;quot;, 50),
+)
+
+heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), fontsize=14)
+heatmap.yaxis.set_ticklabels(
+    heatmap.yaxis.get_ticklabels(), rotation=0, fontsize=14
+)
+
+plt.title(&amp;quot;Confusion Matrix&amp;quot;)
+plt.ylabel(&amp;quot;Ground Truth&amp;quot;)
+plt.xlabel(&amp;quot;Prediction&amp;quot;)
+
+plt.show()
+
+precision = precision_score(y_val.values, preds[0])
+recall = recall_score(y_val.values, preds[0])
+acc = accuracy_score(y_val.values, preds[0])
+
+print(f&amp;quot;Precision: {precision * 100:.3f}%&amp;quot;)
+print(f&amp;quot;   Recall: {recall * 100 :.3f}%&amp;quot;)
+print(f&amp;quot; Accuracy: {acc * 100:.3f}%&amp;quot;)
+
+results.append([&#39;Simple RNN&#39;, precision, recall, acc])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_36_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Precision: 96.875%
+   Recall: 95.385%
+ Accuracy: 98.943%
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;model.save(f&#39;saved_models/my_model_{time.time()}.h5&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df_results = pd.DataFrame(results, columns=[&#39;Algorithm&#39;, &#39;Precision&#39;, &#39;Recall&#39;, &#39;Accuracy&#39;])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df_results
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;Algorithm&lt;/th&gt;
+      &lt;th&gt;Precision&lt;/th&gt;
+      &lt;th&gt;Recall&lt;/th&gt;
+      &lt;th&gt;Accuracy&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;K-Nearest Neighbors&lt;/td&gt;
+      &lt;td&gt;1.000000&lt;/td&gt;
+      &lt;td&gt;0.646154&lt;/td&gt;
+      &lt;td&gt;0.951374&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;Multinomial Naive Bayes&lt;/td&gt;
+      &lt;td&gt;0.983871&lt;/td&gt;
+      &lt;td&gt;0.938462&lt;/td&gt;
+      &lt;td&gt;0.989429&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;Support Vector Machine&lt;/td&gt;
+      &lt;td&gt;0.983051&lt;/td&gt;
+      &lt;td&gt;0.892308&lt;/td&gt;
+      &lt;td&gt;0.983087&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;AdaBoost&lt;/td&gt;
+      &lt;td&gt;0.983607&lt;/td&gt;
+      &lt;td&gt;0.923077&lt;/td&gt;
+      &lt;td&gt;0.987315&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;Random Forest&lt;/td&gt;
+      &lt;td&gt;0.981481&lt;/td&gt;
+      &lt;td&gt;0.815385&lt;/td&gt;
+      &lt;td&gt;0.972516&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;5&lt;/th&gt;
+      &lt;td&gt;XGBoost&lt;/td&gt;
+      &lt;td&gt;0.966102&lt;/td&gt;
+      &lt;td&gt;0.876923&lt;/td&gt;
+      &lt;td&gt;0.978858&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;6&lt;/th&gt;
+      &lt;td&gt;Simple RNN&lt;/td&gt;
+      &lt;td&gt;0.968750&lt;/td&gt;
+      &lt;td&gt;0.953846&lt;/td&gt;
+      &lt;td&gt;0.989429&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;evaluating-the-test&#34;&gt;Evaluating the test&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;TEST_PATH = &#39;TestSet/sms-hamspam-test.csv&#39;
+
+df_test = pd.read_csv(TEST_PATH,names = [&#39;text&#39;])
+df_test
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;text&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;I know that my friend already told that.&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;It took Mr owl 3 licks&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;Dunno y u ask me.&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;K.k:)advance happy pongal.&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;I know but you need to get hotel now. I just g...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;...&lt;/th&gt;
+      &lt;td&gt;...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;842&lt;/th&gt;
+      &lt;td&gt;Booked ticket for pongal?&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;843&lt;/th&gt;
+      &lt;td&gt;Yes :)it completely in out of form:)clark also...&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;844&lt;/th&gt;
+      &lt;td&gt;Yeah sure&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;845&lt;/th&gt;
+      &lt;td&gt;He is there. You call and meet him&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;846&lt;/th&gt;
+      &lt;td&gt;I see a cup of coffee animation&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;847 rows × 1 columns&lt;/p&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def apply_data_preprocessing(dataframe, column):
+    
+    df = dataframe.copy()
+    
+    df[column] = df[column].apply(
+        lambda row: re.sub(r&amp;quot;[^a-zA-Z]+&amp;quot;, &amp;quot; &amp;quot;, row)  
+    )
+    
+    df[column] = df[column].apply(lambda row: word_tokenize(row))
+    
+    df[column] = df[column].apply(
+        lambda row: [
+            token for token in row if token not in set(stopwords.words(&amp;quot;english&amp;quot;))
+        ]
+    )
+    
+    df[column] = df[column].apply(
+        lambda row: &amp;quot; &amp;quot;.join([WordNetLemmatizer().lemmatize(word) for word in row])
+    )
+    
+    X = df[column].values
+    
+    max_words = 1000
+    max_len = 150
+    tok = Tokenizer(num_words=max_words)
+    tok.fit_on_texts(X)
+    sequences = tok.texts_to_sequences(X)
+    sequences_matrix = sequence.pad_sequences(sequences, maxlen = max_len)
+    
+    return sequences_matrix
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def classify(text_csv, column, model_path):
+    
+    df_test = pd.read_csv(text_csv,names = [column])
+    
+    sequences_matrix = apply_data_preprocessing(df_test, column)
+    
+    model = tf.keras.models.load_model(model_path)
+    
+    preds = model.predict(sequences_matrix)
+    preds = np.uint8(np.round(preds.T))
+    preds = preds[0]
+    
+    df_test[&#39;class&#39;] = preds
+    
+    return df_test
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;7-references&#34;&gt;7. References&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.kaggle.com/uciml/sms-spam-collection-dataset/notebooks&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;SMS Spam Detection - Kaggle notebooks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Metro Interstate Traffic Volume Analysis</title>
+      <link>https://jpvt.github.io/post/metro_traffic_volume/</link>
+      <pubDate>Wed, 02 Dec 2020 00:00:00 +0000</pubDate>
+      <guid>https://jpvt.github.io/post/metro_traffic_volume/</guid>
+      <description>&lt;h1 id=&#34;metro-interstate-traffic-volume-analysis&#34;&gt;Metro Interstate Traffic Volume Analysis&lt;/h1&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;In this notebook, I will discuss the results of my second assignment of the class Introduction to Artificial Intelligence. My job was to predict the traffic volume on Metro Interstate with machine learning models. Finally, I will discuss my results and present some insights into the data.&lt;/p&gt;
+&lt;h2 id=&#34;dataset&#34;&gt;Dataset&lt;/h2&gt;
+&lt;p&gt;The dataset used for this assignment is used by many people all over the world, mainly for learning purposes.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;About:&lt;/strong&gt;
+Hourly Interstate 94 Westbound traffic volume for MN DoT ATR station 301, roughly midway between Minneapolis and St Paul, MN. Hourly weather features and holidays included for impacts on traffic volume.&lt;/p&gt;
+&lt;p&gt;This dataset is available at: &lt;a href=&#34;https://archive.ics.uci.edu/ml/machine-learning-databases/00492/&#34;&gt;https://archive.ics.uci.edu/ml/machine-learning-databases/00492/&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;importing-packages&#34;&gt;Importing Packages&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# Data Preprocessing Packages
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import re
+
+# Data Visualization Packages
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas_profiling as pf
+from sklearn.ensemble import RandomForestRegressor
+
+# Models and Metrics
+from sklearn import model_selection, svm
+from sklearn.svm import SVR
+from sklearn.metrics import auc, accuracy_score, confusion_matrix, mean_squared_error, mean_absolute_error, r2_score
+from sklearn.model_selection import cross_val_score, cross_val_predict,GridSearchCV, StratifiedKFold, KFold, RandomizedSearchCV, train_test_split
+
+import xgboost as xgb
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;getting-the-data&#34;&gt;Getting the data:&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;dataset = False
+
+if dataset:
+    df = pd.read_csv(&amp;quot;metro.csv&amp;quot;)
+else:
+    df = pd.read_csv(&amp;quot;https://archive.ics.uci.edu/ml/machine-learning-databases/00492/Metro_Interstate_Traffic_Volume.csv.gz&amp;quot;)
+
+
+df.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;rain_1h&lt;/th&gt;
+      &lt;th&gt;snow_1h&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;weather_description&lt;/th&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;traffic_volume&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;scattered clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 09:00:00&lt;/td&gt;
+      &lt;td&gt;5545&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;broken clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 10:00:00&lt;/td&gt;
+      &lt;td&gt;4516&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;overcast clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 11:00:00&lt;/td&gt;
+      &lt;td&gt;4767&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;overcast clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 12:00:00&lt;/td&gt;
+      &lt;td&gt;5026&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;broken clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 13:00:00&lt;/td&gt;
+      &lt;td&gt;4918&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.info() #Basic information about each column
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;class &#39;pandas.core.frame.DataFrame&#39;&amp;gt;
+RangeIndex: 48204 entries, 0 to 48203
+Data columns (total 9 columns):
+holiday                48204 non-null object
+temp                   48204 non-null float64
+rain_1h                48204 non-null float64
+snow_1h                48204 non-null float64
+clouds_all             48204 non-null int64
+weather_main           48204 non-null object
+weather_description    48204 non-null object
+date_time              48204 non-null object
+traffic_volume         48204 non-null int64
+dtypes: float64(3), int64(2), object(4)
+memory usage: 3.3+ MB
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;descrições-do-dataset-valores-numéricos-e-categóricos&#34;&gt;Descrições do dataset, valores numéricos e categóricos&lt;/h4&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.describe()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;rain_1h&lt;/th&gt;
+      &lt;th&gt;snow_1h&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;traffic_volume&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;count&lt;/th&gt;
+      &lt;td&gt;48204.000000&lt;/td&gt;
+      &lt;td&gt;48204.000000&lt;/td&gt;
+      &lt;td&gt;48204.000000&lt;/td&gt;
+      &lt;td&gt;48204.000000&lt;/td&gt;
+      &lt;td&gt;48204.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;mean&lt;/th&gt;
+      &lt;td&gt;281.205870&lt;/td&gt;
+      &lt;td&gt;0.334264&lt;/td&gt;
+      &lt;td&gt;0.000222&lt;/td&gt;
+      &lt;td&gt;49.362231&lt;/td&gt;
+      &lt;td&gt;3259.818355&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;std&lt;/th&gt;
+      &lt;td&gt;13.338232&lt;/td&gt;
+      &lt;td&gt;44.789133&lt;/td&gt;
+      &lt;td&gt;0.008168&lt;/td&gt;
+      &lt;td&gt;39.015750&lt;/td&gt;
+      &lt;td&gt;1986.860670&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;min&lt;/th&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;25%&lt;/th&gt;
+      &lt;td&gt;272.160000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;1.000000&lt;/td&gt;
+      &lt;td&gt;1193.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;50%&lt;/th&gt;
+      &lt;td&gt;282.450000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;64.000000&lt;/td&gt;
+      &lt;td&gt;3380.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;75%&lt;/th&gt;
+      &lt;td&gt;291.806000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;0.000000&lt;/td&gt;
+      &lt;td&gt;90.000000&lt;/td&gt;
+      &lt;td&gt;4933.000000&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;max&lt;/th&gt;
+      &lt;td&gt;310.070000&lt;/td&gt;
+      &lt;td&gt;9831.300000&lt;/td&gt;
+      &lt;td&gt;0.510000&lt;/td&gt;
+      &lt;td&gt;100.000000&lt;/td&gt;
+      &lt;td&gt;7280.000000&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.describe(include= &#39;object&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;weather_description&lt;/th&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;count&lt;/th&gt;
+      &lt;td&gt;48204&lt;/td&gt;
+      &lt;td&gt;48204&lt;/td&gt;
+      &lt;td&gt;48204&lt;/td&gt;
+      &lt;td&gt;48204&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;unique&lt;/th&gt;
+      &lt;td&gt;12&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;38&lt;/td&gt;
+      &lt;td&gt;40575&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;top&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;sky is clear&lt;/td&gt;
+      &lt;td&gt;2013-04-18 22:00:00&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;freq&lt;/th&gt;
+      &lt;td&gt;48143&lt;/td&gt;
+      &lt;td&gt;15164&lt;/td&gt;
+      &lt;td&gt;11665&lt;/td&gt;
+      &lt;td&gt;6&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;exploratory-data-analysis&#34;&gt;Exploratory Data Analysis:&lt;/h2&gt;
+&lt;p&gt;It is extremely important to know the dataset well since in machine learning is the diversity in the experience that will guarantee success in carrying out a given task. Statistics in this process is very useful, as it provides descriptive measures that demonstrate the main characteristics of the data we are dealing with. Additionally, searching for information about the data and the problem to which it is linked can be of great help and even essential to improve the achievement of the desired task.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+&lt;div&gt;
+&lt;img src=&#34;bob_eda.jpg&#34; width=&#34;400&#34;/&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;about-the-data&#34;&gt;About the data:&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Holiday: Indicates if the date is a holiday and if it specifies the holiday, if not &lt;strong&gt;None&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;Temp: Indicates the temperature in Kelvin.&lt;/li&gt;
+&lt;li&gt;rain_1h: Amount in mm of rain that occurred in the hour.&lt;/li&gt;
+&lt;li&gt;snow_1h: Amount in mm of snow that occurred in the hour.&lt;/li&gt;
+&lt;li&gt;clouds_all: Percentage of cloud cover.&lt;/li&gt;
+&lt;li&gt;weather_main: Short textual description of the current weather.&lt;/li&gt;
+&lt;li&gt;weather_description:  Longer textual description of the current weather.&lt;/li&gt;
+&lt;li&gt;date_time: Hour of the data collected in local CST time.&lt;/li&gt;
+&lt;li&gt;traffic_volume: Hourly I-94 ATR 301 reported westbound traffic volume.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;disponível em: &lt;a href=&#34;https://archive.ics.uci.edu/ml/datasets/Metro+Interstate+Traffic+Volume&#34;&gt;https://archive.ics.uci.edu/ml/datasets/Metro+Interstate+Traffic+Volume&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The first observations to be made with the information we have so far are:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;There is no missing data, but that does not mean that there is no inconsistent data.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;The date_time, a time stamp, is not defined as the pandas&#39; timestamp. The way it was extracted will not bring us any information and that is a big problem. Since in most cities, traffic occurs at rush hour.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;There are temperature records at absolute zero, clearly inconsistent data.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;rain_1h and snow_1h have many zeros and their distribution is not very well defined, since in rare moments they have high records.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;99.9% of Holiday data is None, and the other data is spread over multiple holidays&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;holiday&#34;&gt;Holiday&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;plt.figure(figsize = (16,6))
+sns.countplot(y = df[&#39;holiday&#39;])
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_13_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As normal days are much more frequent over the years of the dataset, then holidays are not visible in the Plot. To analyze them it is necessary to remove the normal days. Then I will categorize between Holiday and Non-Holiday&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;h_df = df[df[&#39;holiday&#39;] != &#39;None&#39;]
+plt.figure(figsize = (16,6))
+sns.countplot(y = h_df[&#39;holiday&#39;])
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_15_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;To solve this problem, I will recategorize all holidays as Holiday and leave them in the same category.&lt;/p&gt;
+&lt;h3 id=&#34;temperature&#34;&gt;Temperature&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;plt.figure(figsize = (16,8))
+sns.boxplot(df[&#39;temp&#39;])
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_18_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As seen before, some Outliers are at absolute zero, probably due to some error in capturing the temperature. Then I will remove the Outliers so as not to affect my result.&lt;/p&gt;
+&lt;h3 id=&#34;rain-and-snow&#34;&gt;Rain and Snow&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;plt.figure(figsize = (16,6))
+sns.distplot(df[&#39;rain_1h&#39;], kde = True)
+plt.show()
+
+plt.figure(figsize = (16,6))
+sns.distplot(df[&#39;snow_1h&#39;], kde = True)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_21_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;output_21_1.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As can be seen, the features have many zeros and the distribution is skewed.&lt;/p&gt;
+&lt;h3 id=&#34;clouds&#34;&gt;Clouds&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;plt.figure(figsize = (16,6))
+sns.distplot(df[&#39;clouds_all&#39;],)
+plt.show()
+df[&#39;clouds_all&#39;].describe()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_24_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;count    48204.000000
+mean        49.362231
+std         39.015750
+min          0.000000
+25%          1.000000
+50%         64.000000
+75%         90.000000
+max        100.000000
+Name: clouds_all, dtype: float64
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It has many zeros, but does not appear to show any inconsistent data.&lt;/p&gt;
+&lt;h3 id=&#34;weather-main-e-weather-description&#34;&gt;Weather Main e Weather Description&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;plt.figure(figsize = (16,6))
+sns.countplot(y = df[&#39;weather_main&#39;])
+plt.show()
+
+plt.figure(figsize = (16,8))
+sns.countplot(y =df[&#39;weather_description&#39;])
+plt.show()
+
+confusion_matrix = pd.crosstab(df[&#39;weather_main&#39;], df[&#39;weather_description&#39;])
+confusion_matrix.corr(method = &#39;spearman&#39;).style.background_gradient(cmap=&#39;coolwarm&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_27_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;output_27_1.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Since weather_description offers only an extension of the description of weather_main, it is probably not of interest to keep both for modeling. Since they carry correlated information, which can be seen in the matrix above.&lt;/p&gt;
+&lt;h2 id=&#34;data-cleaning&#34;&gt;Data Cleaning&lt;/h2&gt;
+&lt;p&gt;Now that the exploratory data analysis has been done, it will be necessary to clean the dataset, to guarantee the success of the model. The observations made at the EDA will be made below.&lt;/p&gt;
+&lt;h3 id=&#34;holiday-parsing&#34;&gt;Holiday Parsing&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def holiday(holiday):
+    cat = &#39;None&#39;
+    if holiday != &#39;None&#39;:
+        cat = &#39;Holiday&#39;
+        
+    return cat
+
+df[&#39;holiday&#39;] = df[&#39;holiday&#39;].map(holiday)
+df[&#39;holiday&#39;].unique()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;array([&#39;None&#39;, &#39;Holiday&#39;], dtype=object)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;parsing-do-date_time&#34;&gt;Parsing do date_time&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def parse_timestamp(df, datetime):
+    df[datetime] = pd.to_datetime(df[datetime])
+    df[&#39;Year&#39;] = df[datetime].dt.year
+    df[&#39;Month&#39;] = df[datetime].dt.month
+    df[&#39;Weekday&#39;] = df[datetime].dt.weekday
+    df[&#39;Hour&#39;] = df[datetime].dt.hour
+    
+def categorize_hour(hour):    
+    cat = &#39;None&#39;
+    
+    if hour in [1,2,3,4,5]:
+        cat = &#39;dawn&#39;
+    elif hour in [6,7,8,9,10,11,12]:
+        cat = &#39;morning&#39;
+    elif hour in [13,14,15,16,17,18]:
+        cat = &#39;afternoon&#39;
+    elif hour in [19,20,21,22,23,24]:
+        cat = &#39;night&#39;
+        
+    return cat   
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Before parsing the date_time i will remove possible duplicates.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.drop_duplicates(inplace = True)
+df.duplicated().sum()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;parse_timestamp(df, &#39;date_time&#39;)
+#df[&#39;Hour&#39;] = df[&#39;Hour&#39;].map(categorize_hour)
+df.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;rain_1h&lt;/th&gt;
+      &lt;th&gt;snow_1h&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;weather_description&lt;/th&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;traffic_volume&lt;/th&gt;
+      &lt;th&gt;Year&lt;/th&gt;
+      &lt;th&gt;Month&lt;/th&gt;
+      &lt;th&gt;Weekday&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;0&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;scattered clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 09:00:00&lt;/td&gt;
+      &lt;td&gt;5545&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;1&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;broken clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 10:00:00&lt;/td&gt;
+      &lt;td&gt;4516&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;overcast clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 11:00:00&lt;/td&gt;
+      &lt;td&gt;4767&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;3&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;overcast clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 12:00:00&lt;/td&gt;
+      &lt;td&gt;5026&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;4&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;broken clouds&lt;/td&gt;
+      &lt;td&gt;2012-10-02 13:00:00&lt;/td&gt;
+      &lt;td&gt;4918&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.set_index(&#39;date_time&#39;,inplace = True)
+df.sort_index()[&#39;traffic_volume&#39;].rolling(4000).mean().plot(figsize = (16,8))
+plt.xlabel(&#39;Date Time&#39;)
+plt.ylabel(&#39;Traffic Volume&#39;)
+df.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;rain_1h&lt;/th&gt;
+      &lt;th&gt;snow_1h&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;weather_description&lt;/th&gt;
+      &lt;th&gt;traffic_volume&lt;/th&gt;
+      &lt;th&gt;Year&lt;/th&gt;
+      &lt;th&gt;Month&lt;/th&gt;
+      &lt;th&gt;Weekday&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 09:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;scattered clouds&lt;/td&gt;
+      &lt;td&gt;5545&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 10:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;broken clouds&lt;/td&gt;
+      &lt;td&gt;4516&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 11:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;overcast clouds&lt;/td&gt;
+      &lt;td&gt;4767&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 12:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;overcast clouds&lt;/td&gt;
+      &lt;td&gt;5026&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 13:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;broken clouds&lt;/td&gt;
+      &lt;td&gt;4918&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;img src=&#34;output_39_1.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;removing-weather_description&#34;&gt;Removing Weather_description&lt;/h3&gt;
+&lt;p&gt;I have chosen to remove weather_description due to redundancy when placing with weather_main&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.drop(columns = [&#39;weather_description&#39;], inplace = True)
+df.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;rain_1h&lt;/th&gt;
+      &lt;th&gt;snow_1h&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;traffic_volume&lt;/th&gt;
+      &lt;th&gt;Year&lt;/th&gt;
+      &lt;th&gt;Month&lt;/th&gt;
+      &lt;th&gt;Weekday&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 09:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;5545&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 10:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;4516&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 11:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;4767&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 12:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;5026&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 13:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;0.0&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;4918&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;removendo-rain_1h-e-snow_1h&#34;&gt;Removendo rain_1h e snow_1h&lt;/h3&gt;
+&lt;p&gt;As the distribution of rain_1h and snow_1h is not good and the vast majority of values are at zero, I will remove them, since the weather information includes whether it is raining, snowing, or neither.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.drop(columns = [&#39;rain_1h&#39;,&#39;snow_1h&#39;],inplace = True)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;traffic_volume&lt;/th&gt;
+      &lt;th&gt;Year&lt;/th&gt;
+      &lt;th&gt;Month&lt;/th&gt;
+      &lt;th&gt;Weekday&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 09:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;5545&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 10:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;4516&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 11:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;4767&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 12:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;5026&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 13:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;4918&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;feature-importance&#34;&gt;Feature Importance&lt;/h3&gt;
+&lt;p&gt;I will run a Random Forest in order to find the importance of each feature for the result of traffic_volume. However, it is necessary to transform categorical data first.&lt;/p&gt;
+&lt;h3 id=&#34;splitting-features-and-traffic-volume&#34;&gt;Splitting Features and Traffic Volume&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;feats = df.drop(&#39;traffic_volume&#39;,1).copy()
+label = df[&#39;traffic_volume&#39;].copy()
+
+feats.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;Year&lt;/th&gt;
+      &lt;th&gt;Month&lt;/th&gt;
+      &lt;th&gt;Weekday&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 09:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 10:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 11:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 12:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 13:00:00&lt;/th&gt;
+      &lt;td&gt;None&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;Clouds&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;copy-with-label-enconder-of-the-features&#34;&gt;Copy with Label Enconder of the features&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;le = LabelEncoder()
+num_feats = feats.copy()
+
+for column in num_feats.columns:
+    if num_feats[column].dtype == &#39;object&#39;:
+        num_feats[column] = le.fit_transform(num_feats[column])
+
+num_feats.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;holiday&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;weather_main&lt;/th&gt;
+      &lt;th&gt;Year&lt;/th&gt;
+      &lt;th&gt;Month&lt;/th&gt;
+      &lt;th&gt;Weekday&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 09:00:00&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 10:00:00&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 11:00:00&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 12:00:00&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 13:00:00&lt;/th&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;2012&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;copy-with-one-hot-enconding-of-the-features&#34;&gt;Copy with One Hot Enconding of the features&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;onehot_feats = feats.copy()
+onehot_feats[[&#39;Year&#39;,&#39;Month&#39;,&#39;Weekday&#39;]] = feats[[&#39;Year&#39;,&#39;Month&#39;,&#39;Weekday&#39;]].astype(&#39;category&#39;)
+onehot_feats = pd.get_dummies(onehot_feats)
+
+onehot_feats.head()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div&gt;
+&lt;style scoped&gt;
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+&lt;pre&gt;&lt;code&gt;.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;/style&gt;&lt;/p&gt;
+&lt;table border=&#34;1&#34; class=&#34;dataframe&#34;&gt;
+  &lt;thead&gt;
+    &lt;tr style=&#34;text-align: right;&#34;&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;temp&lt;/th&gt;
+      &lt;th&gt;clouds_all&lt;/th&gt;
+      &lt;th&gt;Hour&lt;/th&gt;
+      &lt;th&gt;holiday_Holiday&lt;/th&gt;
+      &lt;th&gt;holiday_None&lt;/th&gt;
+      &lt;th&gt;weather_main_Clear&lt;/th&gt;
+      &lt;th&gt;weather_main_Clouds&lt;/th&gt;
+      &lt;th&gt;weather_main_Drizzle&lt;/th&gt;
+      &lt;th&gt;weather_main_Fog&lt;/th&gt;
+      &lt;th&gt;weather_main_Haze&lt;/th&gt;
+      &lt;th&gt;...&lt;/th&gt;
+      &lt;th&gt;Month_10&lt;/th&gt;
+      &lt;th&gt;Month_11&lt;/th&gt;
+      &lt;th&gt;Month_12&lt;/th&gt;
+      &lt;th&gt;Weekday_0&lt;/th&gt;
+      &lt;th&gt;Weekday_1&lt;/th&gt;
+      &lt;th&gt;Weekday_2&lt;/th&gt;
+      &lt;th&gt;Weekday_3&lt;/th&gt;
+      &lt;th&gt;Weekday_4&lt;/th&gt;
+      &lt;th&gt;Weekday_5&lt;/th&gt;
+      &lt;th&gt;Weekday_6&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;date_time&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 09:00:00&lt;/th&gt;
+      &lt;td&gt;288.28&lt;/td&gt;
+      &lt;td&gt;40&lt;/td&gt;
+      &lt;td&gt;9&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 10:00:00&lt;/th&gt;
+      &lt;td&gt;289.36&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 11:00:00&lt;/th&gt;
+      &lt;td&gt;289.58&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 12:00:00&lt;/th&gt;
+      &lt;td&gt;290.13&lt;/td&gt;
+      &lt;td&gt;90&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th&gt;2012-10-02 13:00:00&lt;/th&gt;
+      &lt;td&gt;291.14&lt;/td&gt;
+      &lt;td&gt;75&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;...&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;5 rows × 42 columns&lt;/p&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;feature-importance---label-encoder&#34;&gt;Feature Importance - Label Encoder&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;model = RandomForestRegressor(random_state=1, max_depth=10)
+model.fit(num_feats,label)
+
+#Plot
+features = feats.columns
+importances = model.feature_importances_
+indices = np.argsort(importances)[-5:] #Top 5 features
+plt.title(&#39;Feature Importances&#39;)
+plt.barh(range(len(indices)), importances[indices], color=&#39;b&#39;, align=&#39;center&#39;)
+plt.yticks(range(len(indices)), [features[i] for i in indices])
+plt.xlabel(&#39;Relative Importance&#39;)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_53_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;feature-importance---one-hot-encoding&#34;&gt;Feature Importance - One Hot Encoding&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;model = RandomForestRegressor(random_state=1, max_depth=10)
+model.fit(onehot_feats,label)
+#Plot t
+features = onehot_feats.columns
+importances = model.feature_importances_
+indices = np.argsort(importances)[-10:] #Top 10 features
+plt.title(&#39;Feature Importances&#39;)
+plt.barh(range(len(indices)), importances[indices], color=&#39;b&#39;, align=&#39;center&#39;)
+plt.yticks(range(len(indices)), [features[i] for i in indices])
+plt.xlabel(&#39;Relative Importance&#39;)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;output_55_0.png&#34; alt=&#34;png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It is clear now that the hour feature is the one that most influences the traffic volume. This can be commonly observed in big cities where at rush hour the traffic volume is high.&lt;/p&gt;
+&lt;h2 id=&#34;scaling&#34;&gt;Scaling&lt;/h2&gt;
+&lt;p&gt;Necessary to keep the numerical values in a range and consequently one feature does not stand out much more than the other when training the model.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;X = num_feats.values
+X = preprocessing.scale(X)
+y = label.values
+
+print(X)
+print(y)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;[[ 0.03560205  0.53041592 -0.24004863 ...  1.02779521 -0.98947829
+  -0.34548099]
+ [ 0.03560205  0.61138394  0.65704665 ...  1.02779521 -0.98947829
+  -0.20139502]
+ [ 0.03560205  0.62787742  1.04151605 ...  1.02779521 -0.98947829
+  -0.05730906]
+ ...
+ [ 0.03560205  0.11433026  1.04151605 ...  0.73369913  1.50301966
+   1.38355059]
+ [ 0.03560205  0.06634921  1.04151605 ...  0.73369913  1.50301966
+   1.52763656]
+ [ 0.03560205  0.06859832  1.04151605 ...  0.73369913  1.50301966
+   1.67172252]]
+[5545 4516 4767 ... 2159 1450  954]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;train-and-test&#34;&gt;Train and Test&lt;/h2&gt;
+&lt;h3 id=&#34;holdout07-03&#34;&gt;Holdout(0.7; 0.3)&lt;/h3&gt;
+&lt;p&gt;The dataset will be randomly split between training and testing. For this task, we will divide 70% for training, while the rest will be used for testing.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3, random_state = 42)
+X_train.shape
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;(33730, 8)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;random-forest&#34;&gt;&lt;strong&gt;Random Forest&lt;/strong&gt;&lt;/h4&gt;
+&lt;p&gt;It is a supervised ML(Machine Learning) algorithm. Creates several decision trees and combines them to obtain a better prediction.
+&lt;br/&gt;
+&lt;br/&gt;
+Random forest adds randomness to the model when creating trees. It searches for the best attribute in a random subset of the attribute. This creates diversity and generates better models. For this reason, it was possible to find the importance of attributes, performed previously.
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;strong&gt;Advantages:&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Can be used for classification and regression.&lt;/li&gt;
+&lt;li&gt;Handles missing values well.&lt;/li&gt;
+&lt;li&gt;It will hardly overfit the model.&lt;/li&gt;
+&lt;li&gt;Handles large, high dimensional data sets very well (Main reason for choosing this method)
+&lt;br/&gt;
+&lt;br/&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;Disadvantages:&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The programmer does not have much control on the model, it generates black box.
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;br/&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;Random Forest Example:&lt;/strong&gt;&lt;/p&gt;
+&lt;div&gt;
+&lt;img src=&#34;random_forest.png&#34; width=&#34;500&#34;/&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;reg = RandomForestRegressor()
+reg = reg.fit(X_train,y_train)
+predict = reg.predict(X_test)
+accuracy = reg.score(X_test, y_test)
+mae = mean_absolute_error(y_test, predict)
+
+print(f&amp;quot;R2 Score: {round(accuracy * 100, 3)}%&amp;quot;)
+print(f&amp;quot;Mean Absolute Error: {round(mae, 4)}&amp;quot;)
+print(f&#39;RMSE: {round(np.sqrt(mean_squared_error(y_pred=predict,y_true=y_test)),4)}&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;R2 Score: 95.901%
+Mean Absolute Error: 221.4494
+RMSE: 405.0598
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;xgboost&#34;&gt;XGBoost&lt;/h3&gt;
+&lt;p&gt;It is an implementation of the Gradient Boost supervised ML algorithm, famous for its speed and performance. Gradient Boost tries to predict a target variable, for this it combines a group of estimates from a set of simpler and &amp;lsquo;weaker&amp;rsquo; models and transforms them into a &amp;lsquo;stronger&amp;rsquo; model.
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;strong&gt;Gradient Boosting Example:&lt;/strong&gt;&lt;/p&gt;
+&lt;div&gt;
+&lt;img src=&#34;gradboost.png&#34; width=&#34;350&#34;/&gt;
+&lt;/div&gt;
+&lt;p&gt;In this example, it can be seen that Gradient Boosting is a method in which new models are trained to resolve errors from previous models.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;xgb_model = xgb.XGBRegressor(objective=&amp;quot;reg:squarederror&amp;quot;,  n_estimators=1000, random_state=42,n_jobs=-1)
+xgb_model.fit(X_train,y_train,early_stopping_rounds=10,eval_set=[(X_test, y_test)],verbose = 0)
+y_pred = xgb_model.predict(X_test)
+
+xgb_mae = mean_absolute_error(y_test, y_pred)
+print(f&#39;R2 Score: {round(xgb_model.score(X_test,y_test)*100,2)}&#39;)
+print(f&#39;RMSE: {np.sqrt(mean_squared_error(y_pred=y_pred,y_true=y_test))}&#39;)
+print(f&amp;quot;Mean Absolute Error: {round(xgb_mae, 4)}&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;R2 Score: 96.19
+RMSE: 390.32545493877905
+Mean Absolute Error: 232.6679
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;cross-validation&#34;&gt;Cross-Validation&lt;/h2&gt;
+&lt;p&gt;In this method, the dataset is divided into K parts, while K-1 parts are used for training the remaining partition is used for testing until all the dataset is utilized. The validation of each forecast made is saved in a list and then the average of each metric will be made.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;kf = model_selection.KFold(n_splits=10, shuffle=True, random_state=42)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;random-forest-1&#34;&gt;Random Forest&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;rmse = []
+r2 = []
+mae_l = []
+for train_index, test_index in kf.split(X):
+    reg_kf = RandomForestRegressor()
+    reg_kf.fit(X[train_index],y[train_index])
+    y_pred = reg_kf.predict(X[test_index])
+    actuals = y[test_index]
+    rmse.append(np.sqrt(mean_squared_error(actuals, y_pred)))
+    r2.append(r2_score(actuals,y_pred))
+    mae_l.append(mean_absolute_error(actuals, y_pred))
+
+
+avg_r2 = np.mean(r2)
+avg_rmse = np.mean(rmse)
+avg_mae = np.mean(mae_l)
+print(f&#39;AVG R2 Score :{round(avg_r2,3)*100}%\t Average RMSE:{avg_rmse}\t Average MAE:{round(avg_mae, 4)}&#39;)    
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;AVG R2 Score :95.7%	 Average RMSE:409.69403930472544	 Average MAE:217.4925
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;xgboost-1&#34;&gt;XGBoost&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;rmse = []
+r2 = []
+mae_l = []
+for train_index, test_index in kf.split(X):
+    xgb_model = xgb.XGBRegressor(objective=&amp;quot;reg:squarederror&amp;quot;,  n_estimators=1000, random_state=42,n_jobs=-1)
+    xgb_model.fit(X[train_index],y[train_index],early_stopping_rounds=10,eval_set=[(X[test_index], y[test_index])], verbose = 0)
+    predictions = xgb_model.predict(X[test_index])
+    actuals = y[test_index]
+    rmse.append(np.sqrt(mean_squared_error(actuals, predictions)))
+    r2.append(r2_score(actuals,predictions))
+    mae_l.append(mean_absolute_error(actuals, predictions))
+
+avg_r2 = np.mean(r2)
+avg_rmse = np.mean(rmse)
+avg_mae = np.mean(mae_l)
+print(f&#39;AVG R2 Score :{round(avg_r2,3)*100}%\t Average RMSE:{avg_rmse}\t Average MAE:{round(avg_mae, 4)}&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;AVG R2 Score :96.1%	 Average RMSE:390.5595082859465	 Average MAE:229.8818
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;results-and-discussion&#34;&gt;Results and Discussion:&lt;/h2&gt;
+&lt;p&gt;The metrics chosen for the evaluation of the models were:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;RMSE(Root Mean Squared Error), average of the difference between the actual and the predicted value.&lt;/li&gt;
+&lt;li&gt;MAE(Mean Absolute Error), module mean of the difference between the actual and the predicted value.&lt;/li&gt;
+&lt;li&gt;R²(R Squared), it is a measure that demonstrates how much the model explains the variance of the real value. It varies between zero and one, the closer to one the more adjusted to the sample is the model.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt; From the results presented for each model, it is noticeable that the forecasts fit well with the expected sample. The Holdout method showed better efficiency for the problem than the cross-validation, although the results are not so different. The XGBoost algorithm obtained forecasts with less error and more adjusted to the original sample.
+&lt;br/&gt;
+&lt;p&gt; Despite the satisfying result of the predictive models, they may not be efficient for certain applications, like a route recommendation system, where the value must be very precise. To solve this problem, the next works are expected to implement specific models for time-based problems, such as Recurrent Neural Networks (RNN) and ARIMA, since the features that are most relevant to the problem are related to time series.
+</description>
+    </item>
+    
+  </channel>
+</rss>
