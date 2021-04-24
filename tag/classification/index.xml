@@ -5,12 +5,20 @@
     <link>https://jpvt.github.io/tag/classification/</link>
       <atom:link href="https://jpvt.github.io/tag/classification/index.xml" rel="self" type="application/rss+xml" />
     <description>Classification</description>
-    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Mon, 07 Dec 2020 00:00:00 +0000</lastBuildDate>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Sat, 24 Apr 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://jpvt.github.io/media/icon_hu6e0ba196f4e113be19f679f5e0d6caf1_39320_512x512_fill_lanczos_center_2.png</url>
       <title>Classification</title>
       <link>https://jpvt.github.io/tag/classification/</link>
     </image>
+    
+    <item>
+      <title>Melanoma Detection Tool</title>
+      <link>https://jpvt.github.io/project/melanoma-detection/</link>
+      <pubDate>Sat, 24 Apr 2021 00:00:00 +0000</pubDate>
+      <guid>https://jpvt.github.io/project/melanoma-detection/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>SMS Spam Detection with Machine Learning</title>
